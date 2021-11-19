@@ -1,2 +1,2 @@
 # feature_generating_graphs
-A Graph framework for in-memory data virtualization and dynamic feature computations for BI/AI/ML usecases 
+A read-write Object Graph Framework for in-memory data virtualization and dynamic feature computations useful for AI/BI/ML pipelines
