@@ -1,0 +1,76 @@
+Directory
+
+access - All DB and Disk access classes
+data - All Data and metadata objects
+grpc - RPC/client communication libraries
+loaders - Data loaders
+proto - Python client rpc system
+utils - Business logic
+	-> Data caching/lookups/navigation
+	-> Graph traversal with map-reduce
+
+Features:
+~~~~~~~~~
+
+Ideas
+~~~~~
+1. Feature derivation and persistence
+2. Map-reduce on server-side on demand
+    - household->customer->deposit($type='cd')->$balance->sum()
+    - AddAttr will add these attributes
+3. Map-reduce on client side - pre-compute
+   Download entire object sub-tree's keys to the client.
+   Example 2(3(5,6),4(7,8)) to 7,8,4,5,6,3,2
+4. Framework for shocks/bumps and simulations
+5. UI and Visualizer
+------------------------------------------------------------------------------------------
+LOGIN 		- login,pwd
+NODES 		- () -> nodeid[]
+NODE_NAME 	- nodeid -> Str
+EDGES 		- () -> edgeid[]
+EDGE_INFO	- edgeid -> Str
+ATTRS		- () -> int[]
+ATTR_INFO	- attrid -> {name,dtype,nodeid[]}
+NODE_KEYS	- nodeid -> nodekey[]
+PARENT_NODE_KEY - nodekey, edgeid -> nodekey
+CHILD_NODE_KEYS - nodekey, edgeid -> nodekey[]
+DATES		- () -> int[]
+
+TASK_REQUEST 	- () -> nodekey, attrid, fromdt, todt
+ADD_ATTR 	- nodeid,objattr -> ack
+NOTIFY_GIT_CHECKIN - attrid -> ack
+NOTIFY_CBO_REFRESH - nodeid -> ack
+
+SAVE_ATTR_DATA 	- attrid,{valuedate,value}[] -> ack
+READ_ATTR_DATA 	- nodekey, attrid -> attrid, {valuedt,value}[]
+ADD_NODE_KEY 	- nodeid -> ack
+
+ACK 	 { status, errstr }
+ATTRINFO { name, dtype, int[] }
+ATTRVAL  { valdate, value }
+------------------------------------------------------------------------------------------
+
+EdgeDb,NodeDataDb,NodeKeyDb,EnumGroupDb
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ResourceWrapper Design goals
+	Avoid updates as much as possible
+	Promote concurrency by storing each edge and node as its own table.
+	Data tables can be sharded by nodekeys
+	Create single integer pk if you can
+
+Edge Tables (Relationships)
+	table = linkkey, objkey(s), fromdt, todt
+	index = objkey0 and objkey1, pk=linkkey
+
+Node tables (Object-Key lookup)
+	table = objkey, strkey, strhash
+	index = objkey, strhash, pk=objkey+strkey (obj ccan have multiple strkeys)
+
+Data table (Data mapping)
+	table = pk,objkey,valueblob
+	index = objkey, pk=attrkey+objkey
+
+QReadCmd = { queryid, rowid, nodekey, objkey, attrkey, attrval }
+	readAttrValue(nodekey, objkey, attrkey) -> timeseries
+	readLinkedObjKeys(nodekey, objkey, edgekey, linkednodekey) -> int[]
+------------------------------------------------------------------------------------------
