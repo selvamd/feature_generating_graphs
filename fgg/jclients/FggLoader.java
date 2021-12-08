@@ -91,7 +91,7 @@ public class FggLoader extends Persistor
 	//TRANSACTIONS, LOANORIG 8 , INITIAL, INITCOMP 10, BRANCH, PRODUCT 12, REGION 13;
 	public static void main( String[] args ) throws Exception
 	{
-		FggLoader loader = new FggLoader("Customer", "cdm_cust_key");
+		FggLoader loader = new FggLoader("Customer", "cust_key");
 		loader.client.connect();
 		loader.buildAttrList();
 		long l1 = System.currentTimeMillis();
