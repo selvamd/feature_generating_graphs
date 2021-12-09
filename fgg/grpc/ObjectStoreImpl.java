@@ -7,24 +7,24 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ObjectStoreImpl implements ObjectStore
 {
     private FggClient client;
-    
-    public ObjectStoreImpl() 
+
+    public ObjectStoreImpl()
     {
         this.client = new FggClient("localhost",33789);
         this.client.connect();
         System.out.println("ObjectStore connected");
     }
-    
+
     public AtomicInteger publishNonBlocking(Collection<FeatureData> data, AtomicInteger res) throws Exception {
         return client.publishNonBlocking(data, res);
     }
 
     //Returns all the object names in the store
-    public String[] getObjectNames() 
+    public String[] getObjectNames()
     {
         List<Integer> nodes = client.getNodes();
         String[] res = new String[nodes.size()];
-        for (int i=0;i<res.length;i++) 
+        for (int i=0;i<res.length;i++)
         {
             GraphItem.Node info = client.getNodeInfo(nodes.get(i));
             res[i] = info.name();
@@ -36,10 +36,10 @@ public class ObjectStoreImpl implements ObjectStore
     public String[] getAttrNames(String objectName) {
         GraphItem.Node info = GraphItem.findNode(objectName);
         if (info == null) return null;
-        List<GraphItem.NodeAttr> attrs = 
+        List<GraphItem.NodeAttr> attrs =
             GraphItem.findAttrs(info, new ArrayList<GraphItem.NodeAttr>());
         String[] res = new String[attrs.size()];
-        for (int i=0;i<res.length;i++) 
+        for (int i=0;i<res.length;i++)
             res[i] = attrs.get(i).name();
         return res;
     }
@@ -47,7 +47,7 @@ public class ObjectStoreImpl implements ObjectStore
 	public void addAttr(int typekey, String name, DataType dtype, FieldType ftype, int size) {
         client.addAttr(typekey, name, dtype.toString(), ftype.toString(), size);
     }
-    
+
     //Returns dtype of a single object attribute
     public String getDataType(String objectName,String attrName) {
         GraphItem.Node info = GraphItem.findNode(objectName);
@@ -66,18 +66,18 @@ public class ObjectStoreImpl implements ObjectStore
         return attr.size();
     }
 
-    public int getObjectPk(String objectName, String key) 
+    public int getObjectPk(String objectName, String key)
     {
         GraphItem.Node info = GraphItem.findNode(objectName);
         if (info == null) return -1;
         return client.getObjPK(info, key);
     }
 
-    public int[] getLinks(GraphItem.Edge edge, int[] objid) 
+    public int[] getLinks(GraphItem.Edge edge, int[] objid)
     {
         List<Integer> lkeys = client.getLinkKeys(edge, objid);
         int[] res = new int[lkeys.size()];
-        for (int i=0;i<res.length;i++) 
+        for (int i=0;i<res.length;i++)
             res[i] = lkeys.get(i);
         return res;
     }
@@ -85,23 +85,23 @@ public class ObjectStoreImpl implements ObjectStore
     public Map<Integer,int[]> getLink2Obj(GraphItem.Edge edge, int[] objid) {
         return client.getLink2Obj(edge, objid);
     }
-    
-	public int setObject(String objectName, int objpk, String key) 
+
+	public int setObject(String objectName, int objpk, String key)
     {
         GraphItem.Node info = GraphItem.findNode(objectName);
         if (info == null) return -1;
         return client.setObjectAltKey(info, objpk, 1, key);
         //return client.setObject(info, key);
-    }        
-    
+    }
+
 	public int setObjectAltKey(String objectName, int objid, int keyseq, String key)
     {
         GraphItem.Node info = GraphItem.findNode(objectName);
         if (info == null) return -1;
         return client.setObjectAltKey(info, objid, keyseq, key);
-    }        
-    
-    public ObjectCursor query(String objectName, String selects, String filter) 
+    }
+
+    public ObjectCursor query(String objectName, String selects, String filter)
     {
         GraphItem.Node info = GraphItem.findNode(objectName);
         if (info == null) return null;
@@ -110,11 +110,11 @@ public class ObjectStoreImpl implements ObjectStore
         int index = 0;
         for (int key:map.keySet())
             result[index++] = key;
-        
-        if (selects == null) 
+
+        if (selects == null)
             for (String attr:getAttrNames(objectName))
                 selects = (selects == null)? attr:selects+","+attr;
-            
+
         ObjectCursor cur = new ObjectCursorImpl(client, info, result);
         return (cur.selectAttrs(selects))? cur:null;
     }
@@ -128,13 +128,20 @@ public class ObjectStoreImpl implements ObjectStore
     }
 
     public void printSchema() {
-        String[] objects = getObjectNames();
-        for (String obj:objects) {
-            System.out.println(obj);
+        System.out.println("--- OBJECTS ---");
+        List<Integer> nodes = client.getNodes();
+        for (int node:nodes) {
+            GraphItem.Node n = client.getNodeInfo(node);
+            String obj = n.name();
+            System.out.println(obj + "(id=" + node + ")");
             String[] attrs = getAttrNames(obj);
             for (String attr:attrs)
                 System.out.println("\t"+attr + "\t" + getDataType(obj,attr));
         }
+        System.out.println("--- RELATIONSHIPS ---");
+        List<Integer> edges = client.getEdges();
+        for (int edge:edges)
+            System.out.println(client.getEdgeInfo(edge));
         System.out.println("");
     }
 

@@ -17,18 +17,19 @@ public class TestClient
         {
             ObjectCursor acct_cursor = cust_cursor.link("Account", 20170101);
             acct_cursor.selectAttrs("acct_key,balance");
-            long bal = 0;
+            long bal = 0;int count = 0;
             while (acct_cursor.next())
             {
                 int i = Integer.parseInt(acct_cursor.get("balance",20190101));
                 bal += i;
+				count++;
 	            System.out.println("\t"+"acctkey=" + acct_cursor.get("acct_key",20190101) + ",balance=" + i);
             }
 
             int objpk = cust_cursor.getObjectPk();
             String custkey = cust_cursor.get("cust_key",20190101);
             String age = cust_cursor.get("age",20190101);
-            System.out.println(objpk +",custkey=" + custkey + ",age=" + age + ",balance=" + bal);
+            System.out.println(objpk +",custkey=" + custkey + ",custage=" + age + ",cust_balance=" + bal +",acct_count="+count);
         }
 		System.out.println("Computed client balance from account balances");
     }
@@ -90,7 +91,7 @@ public class TestClient
     {
         //create a new attribute called age in customer object
         GraphItem.Node node = GraphItem.findNode("Customer");
-		
+
         store.addAttr(node.ordinal(),"age", DataType.INT, FieldType.CORE, 4);
 
         //GraphItem.NodeAttr attr = GraphItem.findAttr(GraphItem.findNode("Customer"), "age");
@@ -125,7 +126,7 @@ public class TestClient
         ObjectStore store = ObjectStore.make();
 		String cmd = null;
 		while (true) {
-			cmd = Utils.prompt("Input Command");
+			cmd = Utils.prompt("Input Command ");
 			if (cmd.equals("schema"))
 				store.printSchema();
 			if (cmd.equals("add_customers"))
