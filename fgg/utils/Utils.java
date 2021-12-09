@@ -145,6 +145,23 @@ public class Utils
 		}
 		return "";
     }
+	
+	public static String prompt(String str) {
+		try {
+	        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+			String aline = null;
+			while (aline == null) 
+			{
+				System.out.print(str + "\t");
+				aline=reader.readLine();
+				if (aline.trim().length() > 0) 
+					return aline;
+				aline = null;
+			}
+		} catch (Exception e) {
+		}
+		return null;
+	}
 
     public static String encrypt(String property)
 	{

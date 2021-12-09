@@ -2,6 +2,7 @@ package fgg.jclients;
 
 import fgg.data.*;
 import fgg.grpc.*;
+import fgg.utils.*;
 
 public class TestClient
 {
@@ -9,7 +10,7 @@ public class TestClient
 
     public static void custBalance(ObjectStore store) throws Exception
     {
-        ObjectCursor cust_cursor = store.query("Customer", "cust_key", "");
+        ObjectCursor cust_cursor = store.query("Customer", "cust_key,age", "");
         if (cust_cursor == null) return;
 
         while (cust_cursor.next())
@@ -21,11 +22,13 @@ public class TestClient
             {
                 int i = Integer.parseInt(acct_cursor.get("balance",20190101));
                 bal += i;
+	            System.out.println("\t"+"acctkey=" + acct_cursor.get("acct_key",20190101) + ",balance=" + i);
             }
 
             int objpk = cust_cursor.getObjectPk();
             String custkey = cust_cursor.get("cust_key",20190101);
-            System.out.println(objpk +",custkey=" + custkey + ",balance=" + bal);
+            String age = cust_cursor.get("age",20190101);
+            System.out.println(objpk +",custkey=" + custkey + ",age=" + age + ",balance=" + bal);
         }
 		System.out.println("Computed client balance from account balances");
     }
@@ -46,6 +49,7 @@ public class TestClient
             //System.out.println("custkey=" + store.getObjectPk("Customer", custkey) + ",custkey=" + custkey + ",acctkey=" + cursor.get("acct_key",20170101));
             int ckey = store.getObjectPk("Customer", custkey);
             //cursor.addLink("Customer", ckey, 20150101, 99991231);
+			System.out.println("\tAssign acctkey " + cursor.getObjectPk() + " to cust key " + ckey);
             store.setLink(edge, new int[] { ckey, cursor.getObjectPk() }, 20150101, 99991231);
         }
 		System.out.println("Clients and Accounts linked");
@@ -56,8 +60,13 @@ public class TestClient
         GraphItem.Node node = GraphItem.findNode("Account");
         store.addAttr(node.ordinal(),"balance", DataType.INT, FieldType.CORE, 4);
 
+		System.out.println("Adding 1000 new account objects");
+		System.out.println("\tFrom " + 100000);
+		System.out.println("\tTo   " + 101000);
+
         for (int i=0;i<1000;i++)
             store.setObject("Account", uniquekey++, ""+(100000 + i));
+
 
         //Create 1000 account objects
         ObjectCursor cursor = store.query("Account", "acct_key,balance", "");
@@ -65,12 +74,13 @@ public class TestClient
 
         //use the cursor to get and set values
         int idx = 0;
+		System.out.println("Iterate the accounts and update their balances");
         while (cursor.next())
         {
             idx = (++idx % 25)+1;
             cursor.set("balance", 20150101, "" + (idx*10000));
             cursor.publish();
-            //System.out.println(cursor.get("acct_key", 20170101)+":"+cursor.get("balance", 20170101));
+            System.out.println("\t"+cursor.get("acct_key", 20170101)+"->balance() = "+cursor.get("balance", 20170101));
         }
 
 		System.out.println("Accounts created");
@@ -80,50 +90,54 @@ public class TestClient
     {
         //create a new attribute called age in customer object
         GraphItem.Node node = GraphItem.findNode("Customer");
+		
         store.addAttr(node.ordinal(),"age", DataType.INT, FieldType.CORE, 4);
 
         //GraphItem.NodeAttr attr = GraphItem.findAttr(GraphItem.findNode("Customer"), "age");
         //if (attr != null) System.out.println("Attr created");
 
         //Create 100 customer objects
+		System.out.println("Adding 100 new customer objects");
+		System.out.println("\tFrom " + 200000);
         for (int i=0;i<100;i++)
             store.setObject("Customer", uniquekey++, ""+(200000 + i));
+		System.out.println("\tTo   " + 200100);
 
         //Query back the all the created objects
         ObjectCursor cursor = store.query("Customer", "cust_key,age", "");
         if (cursor == null) return;
 
         //use the cursor to iterate thru the objects
+		System.out.println("Iterate all customers and update their age");
+		int count = 0;
         while (cursor.next())
         {
             //set value and publish
-            cursor.set("age", 20150101, "50");
+            cursor.set("age", 20150101, ""+ (35+(++count%20)));
             cursor.publish();
-            //System.out.println(cursor.get("cust_key", 20170101)+":"+cursor.get("age", 20170101));
+            System.out.println("\t"+cursor.get("cust_key", 20170101)+"->age() = " + cursor.get("age", 20170101));
         }
 		System.out.println("Clients created");
-    }
-
-    public static void describe(ObjectStore store) {
-        String[] objects = store.getObjectNames();
-        for (String obj:objects) {
-            System.out.println(obj);
-            String[] attrs = store.getAttrNames(obj);
-            for (String attr:attrs)
-                System.out.println("\t"+attr + "\t" + store.getDataType(obj,attr));
-        }
-        System.out.println("");
     }
 
 	public static void main( String[] args ) throws Exception
 	{
         ObjectStore store = ObjectStore.make();
-        store.printSchema();
-
-        createClients(store);
-        createAccounts(store);
-        setupLinks(store);
-        custBalance(store);
-        Thread.sleep(1000);
+		String cmd = null;
+		while (true) {
+			cmd = Utils.prompt("Input Command");
+			if (cmd.equals("schema"))
+				store.printSchema();
+			if (cmd.equals("add_customers"))
+				createClients(store);
+			if (cmd.equals("add_accounts"))
+				createAccounts(store);
+			if (cmd.equals("assign_accounts_to_customers"))
+				setupLinks(store);
+			if (cmd.equals("find_customer_balances"))
+				custBalance(store);
+			if (cmd.equals("quit") || cmd.equals("exit"))
+				System.exit(-1);
+		}
 	}
 }
