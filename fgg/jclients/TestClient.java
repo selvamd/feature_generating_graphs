@@ -129,14 +129,17 @@ public class TestClient
 			cmd = Utils.prompt("Input Command ");
 			if (cmd.equals("schema"))
 				store.printSchema();
-			if (cmd.equals("add_customers"))
+			if (cmd.equals("new_cust"))
 				createClients(store);
-			if (cmd.equals("add_accounts"))
+			if (cmd.equals("new_acct"))
 				createAccounts(store);
-			if (cmd.equals("assign_accounts_to_customers"))
+			if (cmd.equals("acct_cust_rel"))
 				setupLinks(store);
-			if (cmd.equals("find_customer_balances"))
+			if (cmd.equals("cust_bal"))
 				custBalance(store);
+			if (cmd.equals("help")) 
+				for (String s:"schema,new_custs,new_accts,acct_cust_rel,cust_bal".split(","))
+				System.out.println(s);
 			if (cmd.equals("quit") || cmd.equals("exit"))
 				System.exit(-1);
 		}
