@@ -8,7 +8,7 @@ from GraphItem import *
 class FeatureData:
     """ Base class for xmit and receive"""
 
-    def __init__(self, attrkey):
+    def __init__(self, attrkey = 0):
         self.attrkey = attrkey
         self.last = None
         self.keyseq = []
@@ -27,7 +27,7 @@ class FeatureData:
         self.date2value[dt] == val
 
     def reset(self, bPreserveKeys):
-        self.attrkey = ""
+        self.attrkey = 0
         self.date2value = {}
         if bPreserveKeys: return
         self.keyseq = []

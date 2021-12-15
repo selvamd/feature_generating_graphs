@@ -137,7 +137,7 @@ public class TestClient
 				setupLinks(store);
 			if (cmd.equals("cust_bal"))
 				custBalance(store);
-			if (cmd.equals("help")) 
+			if (cmd.equals("help"))
 				for (String s:"schema,new_custs,new_accts,acct_cust_rel,cust_bal".split(","))
 				System.out.println(s);
 			if (cmd.equals("quit") || cmd.equals("exit"))

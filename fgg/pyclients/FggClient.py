@@ -19,7 +19,7 @@ class FggClient:
         it = self.stub.queryData(msg)
         return it.values[2].value
 
-    def getNodes(self, baseNode):
+    def getNodes(self):
         msg = FggDataService_pb2.FggMsg()
         msg.request = MsgType.GET_NODES
         it = self.stub.queryData(msg)
@@ -104,23 +104,6 @@ class FggClient:
                 result[v.name] = v.value
         return result
 
-    def getObject(self, nodekey, objkey):
-        res = []
-        msg = FggDataService_pb2.FggMsg()
-        msg.request = MsgType.GET_OBJECT
-        FggClient.AddParam(msg, 'typekey', nodekey)
-        FggClient.AddParam(msg, 'instkey', objkey)
-        attr = GraphItem.findNodeAttrs(nodekey)
-        for i in range(len(attr)):
-            FggClient.AddParam(msg, 'attrkey'+ str(i), str(attr[i].typeid))
-        it = self.stub.requestData(msg)
-        v = FeatureData(None)
-        for r in it:
-            if v.add(r):
-                res.append(v)
-                v = FeatureData(None)
-        return res
-
     def setObject(self, nodeid, key):
         return self.setObjectAltKey(nodeid, 0, 1, key)
 
@@ -134,7 +117,94 @@ class FggClient:
         it = self.stub.queryData(msg)
         return it.outkey[0]
 
-    def getLink(self, edgeid, objkeys):
+    def flush(self):
+        msg = FggDataService_pb2.FggMsg()
+        msg.request = MsgType.NOTIFY_FLUSH
+        self.stub.queryData(msg)
+
+    def getLink2Obj(self, edgekey, objs):
+        msg = FggDataService_pb2.FggMsg()
+        msg.request = MsgType.GET_LINK_KEYS
+        FggClient.AddParam(msg, 'edgekey', str(edgekey))
+        FggClient.AddParam(msg, 'includeobj', "true")
+        for i in range(len(attrs)):
+            FggClient.AddParam(msg, 'objkey'+ str(i), str(objs[i]))
+        it = self.stub.queryData(msg)
+        res = {}
+        grps = GraphItem.findByPK(edgekey).maxnodes()+1
+        for grp in range(len(it.outkey)/grps):
+            obj = []
+            for idx in range(grps-1):
+                obj.append(it.outkey[grp*grps+idx+1])
+            res[it.outkey[grp*grps]] = obj
+        return res
+
+
+    def addAttr(self, nodeedgeid, name, dtype, fldtype, size):
+        msg = FggDataService_pb2.FggMsg()
+        msg.request = MsgType.ADD_ATTR
+        FggClient.AddParam(msg, 'nodeedgeid', str(nodeedgeid))
+        FggClient.AddParam(msg, 'attrname', name)
+        FggClient.AddParam(msg, 'datatype', dtype)
+        FggClient.AddParam(msg, 'fieldtype', fldtype)
+        FggClient.AddParam(msg, 'attrsize', str(size))
+        it = self.stub.queryData(msg)
+        if len(it.outkey) == 0:
+            return False
+        self.getNodeAttrInfo(it.outkey[0])
+        return True
+
+    def getLink(self, edgekey, linkkey, attrs):
+        res = []
+        msg = FggDataService_pb2.FggMsg()
+        msg.request = MsgType.GET_OBJECT
+        FggClient.AddParam(msg, 'typekey', str(edgekey))
+        FggClient.AddParam(msg, 'instkey', str(linkkey))
+        for i in range(len(attrs)):
+            FggClient.AddParam(msg, 'attrkey'+ str(i), str(attrs[i]))
+        it = self.stub.requestData(msg)
+        v = FeatureData(None)
+        for r in it:
+            if v.add(r):
+                res.append(v)
+                v = FeatureData(None)
+        return res
+
+    def getObject(self, edgekey, linkkey, nodekey, nodecnt, attrs):
+        res = []
+        msg = FggDataService_pb2.FggMsg()
+        msg.request = MsgType.GET_OBJECT
+        FggClient.AddParam(msg, 'typekey', str(nodekey))
+        FggClient.AddParam(msg, 'instkey', str(linkkey))
+        FggClient.AddParam(msg, 'edgekey', str(edgekey))
+        FggClient.AddParam(msg, 'nodecnt', str(nodecnt))
+        for i in range(len(attrs)):
+            FggClient.AddParam(msg, 'attrkey'+ str(i), str(attrs[i]))
+        it = self.stub.requestData(msg)
+        v = FeatureData(None)
+        for r in it:
+            if v.add(r):
+                res.append(v)
+                v = FeatureData(None)
+        return res
+
+    def getObject(self, nodekey, objkey, attrs):
+        res = []
+        msg = FggDataService_pb2.FggMsg()
+        msg.request = MsgType.GET_OBJECT
+        FggClient.AddParam(msg, 'typekey', nodekey)
+        FggClient.AddParam(msg, 'instkey', objkey)
+        for i in range(len(attrs)):
+            FggClient.AddParam(msg, 'attrkey'+ str(i), str(attrs[i]))
+        it = self.stub.requestData(msg)
+        v = FeatureData(None)
+        for r in it:
+            if v.add(r):
+                res.append(v)
+                v = FeatureData(None)
+        return res
+
+    def getLinkKeys(self, edgeid, objkeys):
         msg = FggDataService_pb2.FggMsg()
         msg.request = MsgType.GET_LINK_KEYS
         FggClient.AddParam(msg, 'edgekey', edgeid)
@@ -154,7 +224,7 @@ class FggClient:
         it = self.stub.queryData(msg)
         return it.outkey[0]
 
-    def pulishFeatures(self, features):
+    def publish(self, features):
         input = []
         for feature in features:
             for xmit in feature.xmits():
@@ -184,9 +254,10 @@ class FggClient:
             value = ''
         p.value = str(value)
 
+
     def connect(self):
         self.login("qwer","dsd")
-        nodes = self.getNodes(False)
+        nodes = self.getNodes()
         for node in nodes:
             self.getNodeInfo(node)
         edges = self.getEdges()
@@ -206,9 +277,11 @@ if __name__ == '__main__':
     print("Lookup By Name -> " + str(cust))
     print("Lookup By ID -> " + str(GraphItem.findByPK(cust.typeid)))
     print("Lookup Attrs -> ")
-    for attr in GraphItem.findNodeAttrs(cust.typeid):
+    attrs = GraphItem.findNodeAttrs(cust.typeid)
+    for attr in attrs:
         print(attr)
+    print("Lookup Object -> ")
     key = client.getObjPK(cust.typeid, "200010");
-    objs = client.getObject(cust.typeid, key);
+    objs = client.getObject(cust.typeid, key, [attrs[0].typeid]);
     for obj in objs:
         print(str(obj))
