@@ -28,6 +28,15 @@ class GraphItem:
         return None
 
     @classmethod
+    def findByType(cls, clz):
+        """ retrieves by type """
+        results = []
+        for item in cls.graphitems:
+            if isinstance(item, clz):
+                results.append(item)
+        return results
+
+    @classmethod
     def findNodeAttr(cls, nodeid, name):
         """ retrieves attrs for a node """
         for item in cls.graphitems:
