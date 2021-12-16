@@ -100,6 +100,15 @@ class Edge(GraphItem):
     def maxnodes(self):
         return len(self.nodes)
 
+    def node(self, idx):
+        return self.nodes[idx]
+
+    def index(self, node):
+        for idx in range(len(self.nodes)):
+            if self.nodes[idx].typeid == node.typeid:
+                return idx
+        return -1
+
     def addNodeKey(self, node):
         self.nodes.append(node)
 

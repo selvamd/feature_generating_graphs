@@ -5,6 +5,7 @@ from enum_types import *
 from GraphItem import *
 from FeatureData import *
 from FggClient import *
+from FggCursor import *
 
 class FggStore:
 
@@ -51,7 +52,19 @@ class FggStore:
 
     #Runs a query on single object collection and returns a cursor to iterate all the objects
     def query(self, objectName, selects, filter):
-        pass
+        info = GraphItem.findNode(objectName)
+        if info is None: return None;
+        res = []
+        for key in client.getObjKeys(info.typeid, None):
+            res.append(key)
+        if selects is None:
+            for attr in GraphItem.findNodeAttrs(info.typeid):
+                selects = '' if selects is None else selects + ","
+                selects += attr.typename
+        cur = FggCursor(self.client, info, res)
+        cur.selectAttrs(selects)
+        return cur
+
 
     #typekey = node or edge key
     def addAttr(self, typekey, name, dtype, ftype, size):

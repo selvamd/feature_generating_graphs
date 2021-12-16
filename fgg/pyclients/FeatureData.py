@@ -20,6 +20,21 @@ class FeatureData:
     def setKey(self, key):
         self.keyseq.append(key)
 
+    def getScdDates(self, set):
+        for key in sorted(self.date2value):
+            set.add(self.date2value[key])
+
+    def getValue(self, asof):
+        if len(self.date2value) > 100:
+            print('slow. chg to bsearch')
+        val = None
+        for key in sorted(self.date2value):
+            if key <= asof:
+                val = self.date2value[key]
+            else:
+                break
+        return val
+
     def setValue(self, dt, val):
         for key in sorted(self.date2value):
             if dt >= key and self.date2value[key] == val:

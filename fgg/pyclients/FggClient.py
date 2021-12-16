@@ -161,7 +161,7 @@ class FggClient:
         FggClient.AddParam(msg, 'typekey', str(edgekey))
         FggClient.AddParam(msg, 'instkey', str(linkkey))
         for i in range(len(attrs)):
-            FggClient.AddParam(msg, 'attrkey'+ str(i), str(attrs[i]))
+            FggClient.AddParam(msg, 'attrkey'+ str(i), str(attrs[i].typeid))
         it = self.stub.requestData(msg)
         v = FeatureData(None)
         for r in it:
@@ -179,7 +179,7 @@ class FggClient:
         FggClient.AddParam(msg, 'edgekey', str(edgekey))
         FggClient.AddParam(msg, 'nodecnt', str(nodecnt))
         for i in range(len(attrs)):
-            FggClient.AddParam(msg, 'attrkey'+ str(i), str(attrs[i]))
+            FggClient.AddParam(msg, 'attrkey'+ str(i), str(attrs[i].typeid))
         it = self.stub.requestData(msg)
         v = FeatureData(None)
         for r in it:
@@ -195,7 +195,7 @@ class FggClient:
         FggClient.AddParam(msg, 'typekey', nodekey)
         FggClient.AddParam(msg, 'instkey', objkey)
         for i in range(len(attrs)):
-            FggClient.AddParam(msg, 'attrkey'+ str(i), str(attrs[i]))
+            FggClient.AddParam(msg, 'attrkey'+ str(i), str(attrs[i].typeid))
         it = self.stub.requestData(msg)
         v = FeatureData(None)
         for r in it:
