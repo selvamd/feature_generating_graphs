@@ -61,8 +61,8 @@ class FggClient:
         FggClient.AddParam(msg, 'edgekey', edgeid)
         it = self.stub.queryData(msg)
         edge = Edge(str(edgeid), FggClient.GetParam(it,'name'))
-        for x in range(len(it.values)-2):
-            edge.addNodeKey(FggClient.GetParam(it, 'node' + str(x)))
+        for x in range(len(it.values)-3):
+            edge.addNodeKey(FggClient.GetParam(it, 'nodekey' + str(x)))
         return edge
 
     def getEdgeAttrInfo(self, attrid):
@@ -170,7 +170,7 @@ class FggClient:
                 v = FeatureData(None)
         return res
 
-    def getObject(self, edgekey, linkkey, nodekey, nodecnt, attrs):
+    def getObject2(self, edgekey, linkkey, nodekey, nodecnt, attrs):
         res = []
         msg = FggDataService_pb2.FggMsg()
         msg.request = MsgType.GET_OBJECT
@@ -208,6 +208,7 @@ class FggClient:
         msg = FggDataService_pb2.FggMsg()
         msg.request = MsgType.GET_LINK_KEYS
         FggClient.AddParam(msg, 'edgekey', edgeid)
+        FggClient.AddParam(msg, 'includeobj', 'false')
         for i in range(len(objkeys)):
             FggClient.AddParam(msg, 'nodekey'+str(i), objkeys[i])
         it = self.stub.queryData(msg)

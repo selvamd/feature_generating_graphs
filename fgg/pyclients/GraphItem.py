@@ -20,6 +20,14 @@ class GraphItem:
         return None
 
     @classmethod
+    def findNode(cls, typename):
+        """ retrieves a base node """
+        for item in cls.graphitems:
+            if isinstance(item, Node) and item.typename == typename:
+                return item
+        return None
+
+    @classmethod
     def findByName(cls, typename):
         """ retrieves a base node """
         for item in cls.graphitems:
@@ -42,7 +50,7 @@ class GraphItem:
         for item in cls.graphitems:
             if isinstance(item, NodeAttr):
                 if item.owner.typeid == nodeid:
-                    if item.name == name:
+                    if item.typename == name:
                         return item
         return None
 
@@ -53,7 +61,7 @@ class GraphItem:
         for item in cls.graphitems:
             if isinstance(item, EdgeAttr):
                 if item.owner.typeid == edgeid:
-                    if item.name == name:
+                    if item.typename == name:
                         return item
         return None
 
@@ -66,6 +74,18 @@ class GraphItem:
                 if item.owner.typeid == nodeid:
                     results.append(item)
         return results
+
+    @classmethod
+    def findDefaultEdge(cls, nodeids):
+        """ retrieves attrs for a node """
+        results = []
+        for item in cls.graphitems:
+            if isinstance(item, Edge):
+                if item.typename == str(nodeids[0])+"_"+str(nodeids[1]):
+                    return item
+                if item.typename == str(nodeids[1])+"_"+str(nodeids[0]):
+                    return item
+        return None
 
     @classmethod
     def findEdgeAttrs(cls, edgeid):
@@ -105,7 +125,7 @@ class Edge(GraphItem):
 
     def index(self, node):
         for idx in range(len(self.nodes)):
-            if self.nodes[idx].typeid == node.typeid:
+            if self.nodes[idx] == node.typeid:
                 return idx
         return -1
 
