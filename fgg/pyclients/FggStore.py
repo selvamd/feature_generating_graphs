@@ -115,11 +115,12 @@ if __name__ == '__main__':
     cur = store.query("Customer","cust_key,age","")
     while cur.next():
         act = cur.link("Account", 20170101)
-        act.selectAttrs("acct_key,balance");
+        act.selectAttrs("acct_key,balance")
         while act.next():
             bal = act.get("balance",20190101)
             key = act.get("acct_key",20190101)
             print("\t\t",key,bal)
+
         key = cur.get("cust_key",20190101)
         age = cur.get("age",20190101)
         print(key,age)
