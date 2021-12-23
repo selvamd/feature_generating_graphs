@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
-import java.sql.Statement; 
+import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.Blob;
 import java.util.concurrent.*;
@@ -18,12 +18,12 @@ import fgg.utils.*;
 
 public class EdgeDB extends Persistor {
 
-    private Connection conn; 
-    private LinkType type; 
-    private String table; 
+    private Connection conn;
+    private LinkType type;
+    private String table;
     private Map<Integer,Edge> edges;
     private int maxkey = 0;
-    
+
     public EdgeDB(LinkType type) {
         this.type = type;
         this.table = "e_"+type.toString().toLowerCase();
@@ -38,7 +38,7 @@ public class EdgeDB extends Persistor {
             e.printStackTrace();
         }
     }
-    
+
     public int nextkey() { return maxkey+1; }
     public int batchSize() { return edges.size(); }
 
@@ -53,11 +53,11 @@ public class EdgeDB extends Persistor {
 
     //Returns a pair of <objkeypk,obkkeyfk> for a given ctype (only for 2 node links)
 	public synchronized Set<Long> linkedkey(CBOType ctype, int asofdt, Set<Long> out) {
-        return linkedkey(ctype, asofdt, 0, out);
+        return linkedkey(ctype, 0, asofdt, out);
     }
-    
+
     //Returns a pair of <objkeypk,obkkeyfk> for a given ctype (only for 2 node links)
-	public synchronized Set<Long> linkedkey(CBOType ctype, int count, int asofdt, Set<Long> out) 
+	public synchronized Set<Long> linkedkey(CBOType ctype, int count, int asofdt, Set<Long> out)
     {
 		out.clear();
         if (type.maxnodes() != 2) return out;
@@ -82,16 +82,16 @@ public class EdgeDB extends Persistor {
         }
         return out;
     }
-    
+
     //Creates or looks up a linkkey given component objkeys
-    public synchronized int upsert(int[] keys, int fromdt, int todt) 
+    public synchronized int upsert(int[] keys, int fromdt, int todt)
     {
         for (int i=0;i<type.maxnodes();i++)
-            if (keys[i]<=0) 
+            if (keys[i]<=0)
                 return -1;
-            
+
         Edge edge = findByPk(keys);
-        if (edge == null) 
+        if (edge == null)
         {
             edge = new Edge();
             edge.lk = nextkey();
@@ -102,10 +102,10 @@ public class EdgeDB extends Persistor {
         edge.addTime(fromdt, todt);
         maxkey = Math.max(maxkey,edge.lk);
         edges.put(edge.lk,edge);
-        if (edges.size() > 500) 
+        if (edges.size() > 500)
         {
-            try { 
-                flush(); 
+            try {
+                flush();
                 edges.clear();
             } catch (Exception e) {
             }
@@ -113,18 +113,18 @@ public class EdgeDB extends Persistor {
         return edge.lk;
     }
 
-    public synchronized void flush() throws Exception 
+    public synchronized void flush() throws Exception
     {
         String sql = "INSERT or replace INTO " + table + " VALUES(?,?,?,?,?,?,?)";
         conn.setAutoCommit(false);
         PreparedStatement pstmt = conn.prepareStatement(sql);
-        for (Edge edge:edges.values()) 
+        for (Edge edge:edges.values())
         {
             pstmt.setInt(1,edge.lk);
             for (int i=0;i<edge.key.length;i++)
                 pstmt.setInt(2+i,edge.key[i]);
             ByteBuffer buff = ByteBuffer.allocate(edge.dt.length * 4 * 2);
-            for (int i=0;i<edge.dt.length;i++) 
+            for (int i=0;i<edge.dt.length;i++)
                 buff.putLong(edge.dt[i]);
             pstmt.setBytes(7,buff.array());
             pstmt.addBatch();
@@ -152,7 +152,7 @@ public class EdgeDB extends Persistor {
                     Blob blob = rs.getBlob("dt");
                     if (blob != null && blob.length() > 0) {
                         ByteBuffer buff = ByteBuffer.wrap(blob.getBytes(1,(int)blob.length()));
-                        while (buff.hasRemaining() && asofdt >= buff.getInt()) 
+                        while (buff.hasRemaining() && asofdt >= buff.getInt())
                             status = !status;
                         if (!status) continue;
                     }
@@ -161,9 +161,9 @@ public class EdgeDB extends Persistor {
                 if (includeObj)
                     for (int i=0;i<type.maxnodes();i++)
                         out.add(rs.getInt("k"+i));
-                    
+
             }
-            rs.close(); 
+            rs.close();
             stmt.close();
 		} catch (Exception e) {
             e.printStackTrace();
@@ -183,7 +183,7 @@ public class EdgeDB extends Persistor {
                     Blob blob = rs.getBlob("dt");
                     if (blob != null && blob.length() > 0) {
                         ByteBuffer buff = ByteBuffer.wrap(blob.getBytes(1,(int)blob.length()));
-                        while (buff.hasRemaining()) { 
+                        while (buff.hasRemaining()) {
                             long l =  buff.getLong();
                             if (asofdt >= Utils.msb(l) && asofdt <= Utils.lsb(l))
                                 status = true;
@@ -193,7 +193,7 @@ public class EdgeDB extends Persistor {
                 }
                 out.add(Utils.makelong(rs.getInt(pkidx),rs.getInt(fkidx)));
             }
-            rs.close(); 
+            rs.close();
             stmt.close();
 		} catch (Exception e) {
             e.printStackTrace();
@@ -201,28 +201,28 @@ public class EdgeDB extends Persistor {
 		return out;
 	}
 
-    private String readSql(int[] from, int[] to) 
+    private String readSql(int[] from, int[] to)
     {
         String filter = "";
         if (from != null)
             for (int i = 0;i < from.length; i++)
                 if (from[i] > 0)
                     filter += " AND k" + i + " >= " + from[i];
-                else if (from[i] < 0)   
+                else if (from[i] < 0)
                     filter += " AND k" + i + " > " + (-1 * from[i]);
-                
-        if (to != null) 
+
+        if (to != null)
             for (int i = 0;i < to.length; i++)
                 if (to[i] > 0)
                     filter += " AND k" + i + " <= " + to[i];
                 else if (to[i] < 0)
                     filter += " AND k" + i + " < " + (-1 * to[i]);
-            
+
         String sql = "select * from " + table;
         if (filter.startsWith(" AND")) sql += " where " + filter.substring(4);
         return sql;
     }
-    
+
     private int maxkey() throws Exception {
         int key = 100;
         String sql = "select max(lk) from " + table;
@@ -234,12 +234,12 @@ public class EdgeDB extends Persistor {
         return key;
     }
 
-    private Edge findByPk(int[] keys) 
+    private Edge findByPk(int[] keys)
     {
         Edge edge = null;
         for (Edge e:edges.values()) {
             if (e.matchKey(keys)) {
-                edge = e; 
+                edge = e;
                 break;
             }
         }
@@ -252,20 +252,20 @@ public class EdgeDB extends Persistor {
                 edge = new Edge();
                 edge.init(rs);
             }
-            rs.close(); 
+            rs.close();
             stmt.close();
         } catch (Exception e) {
         }
         return edge;
     }
-    
-    private Edge findByPk(int pk) 
+
+    private Edge findByPk(int pk)
     {
         Edge edge = null;
-        
+
         if (edges.containsKey(pk))
             return edges.get(pk);
-        
+
         try {
             String sql = "select * from " + table + " where lk = " + pk;
             Statement stmt  = conn.createStatement();
@@ -274,27 +274,27 @@ public class EdgeDB extends Persistor {
                 edge = new Edge();
                 edge.init(rs);
             }
-            rs.close(); 
+            rs.close();
             stmt.close();
         } catch (Exception e) {
         }
         return edge;
     }
 
-    private void createIndex(String cols) throws Exception 
+    private void createIndex(String cols) throws Exception
     {
-        String sql = "CREATE INDEX IF NOT EXISTS " + 
-                        cols.replaceAll(",","_") + 
-                        "_idx ON "+ table + 
+        String sql = "CREATE INDEX IF NOT EXISTS " +
+                        cols.replaceAll(",","_") +
+                        "_idx ON "+ table +
                         "(" + cols + ")";
         Statement stmt = conn.createStatement();
         stmt.execute(sql);
         stmt.close();
     }
-    
-    private void createTable() throws Exception 
+
+    private void createTable() throws Exception
     {
-        //onoffdtcsv - For index 0, Activation is ON, for the rest it toggles 
+        //onoffdtcsv - For index 0, Activation is ON, for the rest it toggles
         String sql = "CREATE TABLE IF NOT EXISTS " + table + " (\n"
                 + "	lk integer PRIMARY KEY,\n"
                 + "	k0 integer NOT NULL,\n"
@@ -310,21 +310,21 @@ public class EdgeDB extends Persistor {
     }
 
     //Corresponds to single row in DB
-    private class Edge  
+    private class Edge
     {
         public int lk;
         public int[] key;
         public long[] dt;
         //public int[] from;
         //public int[] to;
-        
-        public void init(ResultSet rs) throws Exception 
+
+        public void init(ResultSet rs) throws Exception
         {
             lk = rs.getInt("lk");
             key = new int[5];
             for (int i=0;i<5;i++)
                 key[i] = rs.getInt("k"+i);
-            
+
             Blob blob = rs.getBlob("dt");
             int len = (blob == null)? 0:(int)blob.length();
             int size = (len+7)/8;
@@ -333,15 +333,15 @@ public class EdgeDB extends Persistor {
             ByteBuffer buff = ByteBuffer.wrap(blob.getBytes(1,(int)blob.length()));
             for (int i=0;i<dt.length;i++)
             {
-                if (buff.hasRemaining()) 
+                if (buff.hasRemaining())
                     dt[i] = Utils.makelong(buff.getInt(),buff.getInt());
             }
         }
-        
-        //pattern match function 
+
+        //pattern match function
         public boolean matchKey(int[] pattern) {
             for (int i=0;i<pattern.length;i++)
-                if (pattern[i] > 0 && pattern[i] != key[i]) 
+                if (pattern[i] > 0 && pattern[i] != key[i])
                 {
                     //System.out.println("hit false");
                     return false;
@@ -349,32 +349,32 @@ public class EdgeDB extends Persistor {
             //System.out.println(pattern[0] + ":compare:" + key[0]);
             return true;
         }
-        
-        public void addTime(int ifrom, int ito) 
+
+        public void addTime(int ifrom, int ito)
         {
             if (ito < ifrom) return;
             int from = 0, cnt = (dt == null)? 1:1+dt.length;
             long[] ndt = new long[cnt];
             for (int i=0;i<cnt-1;i++) ndt[i] = dt[i];
-            ndt[cnt-1] = Utils.makelong(ifrom,ito); 
+            ndt[cnt-1] = Utils.makelong(ifrom,ito);
             Arrays.sort(ndt);
             cnt = 0; //Reset to compute # of non-overlapping validity periods
-            for (int i=0;i<ndt.length-1;i++) 
+            for (int i=0;i<ndt.length-1;i++)
             {
                 int f0 = Utils.msb(ndt[i]);
                 int l0 = Utils.lsb(ndt[i]);
                 int f1 = Utils.msb(ndt[i+1]);
                 int l1 = Utils.lsb(ndt[i+1]);
-                if (from != Math.min(f0,f1)) 
+                if (from != Math.min(f0,f1))
                     cnt++;
                 from = Math.min(f0,f1);
-                if (f1 <= l1) 
+                if (f1 <= l1)
                     ndt[i+1] = ndt[i] = Utils.makelong(from,Math.max(l0,l1));
             }
             //Now all records with same fromdt are duplicates
             //Only use the latest among them has the correct to_dt
             dt = new long[cnt];cnt = 0;
-            for (int i=0;i<ndt.length-1;i++) 
+            for (int i=0;i<ndt.length-1;i++)
                 if (Utils.msb(ndt[i]) != Utils.msb(ndt[i+1]))
                     dt[cnt++] = ndt[i];
         }
