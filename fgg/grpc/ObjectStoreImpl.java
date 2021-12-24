@@ -75,7 +75,7 @@ public class ObjectStoreImpl implements ObjectStore
 
     public int[] getLinks(GraphItem.Edge edge, int[] objid)
     {
-        List<Integer> lkeys = client.getLinkKeys(edge, objid);
+        List<Integer> lkeys = client.getLinkKeys(edge, objid, 0);
         int[] res = new int[lkeys.size()];
         for (int i=0;i<res.length;i++)
             res[i] = lkeys.get(i);

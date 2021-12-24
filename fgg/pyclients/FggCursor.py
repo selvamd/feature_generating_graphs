@@ -25,7 +25,7 @@ class FggCursor:
         edge = GraphItem.findDefaultEdge([info.typeid, self.node.typeid])
         if edge is None: return None
         objid = [self.result[self.idx],0] if edge.index(self.node) == 0 else [0,self.result[self.idx]]
-        fks = self.client.getLinkKeys(edge.typeid, objid)
+        fks = self.client.getLinkKeys(edge.typeid, objid, asof)
         cnt = 1 if info.typeid == self.node.typeid else 0
         return FggCursor(self.client, info, fks, edge, cnt)
 
@@ -35,7 +35,7 @@ class FggCursor:
         info = edge.node((edge.index(node)+1)%2)
         objid = [0,0]
         objid[edge.index(node)] = self.result[self.idx]
-        fks = self.client.getLinkKeys(edge.typeid, objid)
+        fks = self.client.getLinkKeys(edge.typeid, objid, asof)
         cnt = 1 if info.typeid == node.typeid else 0
         return FggCursor(self.client, info, fks, edge, cnt)
 

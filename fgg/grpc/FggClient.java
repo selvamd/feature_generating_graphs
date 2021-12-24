@@ -194,10 +194,11 @@ public class FggClient implements IClientAPI
 	}
 
     //Only returns link keys matching the pattern
-	public List<Integer> getLinkKeys(GraphItem.Edge edge, int[] objid) 
+	public List<Integer> getLinkKeys(GraphItem.Edge edge, int[] objid, int asofdt) 
 	{
 		FggDataServiceOuterClass.FggMsg.Builder bldr = create(MsgType.GET_LINK_KEYS);
 		bldr.addValues(addparam("edgekey",""+edge.ordinal()));
+		bldr.addValues(addparam("asofdt",""+asofdt));
 		bldr.addValues(addparam("includeobj","false"));
 		for (int i=0;i<objid.length;i++)
 			bldr.addValues(addparam("objkey"+i,""+objid[i]));

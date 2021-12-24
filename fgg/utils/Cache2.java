@@ -161,9 +161,9 @@ public class Cache2
     }
 
     //All matching links given partial obj keys
-	public static Set<Integer> getLinks(LinkType type, int[] objkeys, boolean includeObj, Set<Integer> out) 
+	public static Set<Integer> getLinks(LinkType type, int[] objkeys, int asofdt, boolean includeObj, Set<Integer> out) 
     {
-        return edges.get(type).read(objkeys, includeObj, out);
+        return edges.get(type).read(objkeys, asofdt, includeObj, out);
     }
 
 	public static int addLink(LinkType type, int[] objkeys, int fromdt, int todt) 

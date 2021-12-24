@@ -23,11 +23,14 @@ public class EdgeDB extends Persistor {
     private String table;
     private Map<Integer,Edge> edges;
     private int maxkey = 0;
+	private TreeMap<Integer,Integer> buff; 
 
     public EdgeDB(LinkType type) {
         this.type = type;
         this.table = "e_"+type.toString().toLowerCase();
         this.edges = new HashMap<Integer,Edge>();
+		//used for merging time windows
+		this.buff = new TreeMap<Integer,Integer>();
         try {
             conn = getConnectionWithRetries(table);
             createTable();
@@ -68,10 +71,10 @@ public class EdgeDB extends Persistor {
 
     //Returns matching linkkeys given partial or full component objkeys
     //If includeObj=TRUE, returns component objkeys are included in the result
-	public synchronized Set<Integer> read(int[] keys, boolean includeObj, Set<Integer> out)
+	public synchronized Set<Integer> read(int[] keys, int asofdt, boolean includeObj, Set<Integer> out)
     {
 		out.clear();
-        read(keys, keys, 0, includeObj, out);
+        read(keys, keys, asofdt, includeObj, out);
         for (Edge e:edges.values()) {
             if (e.matchKey(keys)) {
                 out.add(e.lk);
@@ -99,7 +102,7 @@ public class EdgeDB extends Persistor {
             for (int i=0;i<keys.length;i++)
                 edge.key[i] = keys[i];
         }
-        edge.addTime(fromdt, todt);
+        edge.addTime(fromdt, todt, buff);
         maxkey = Math.max(maxkey,edge.lk);
         edges.put(edge.lk,edge);
         if (edges.size() > 500)
@@ -124,8 +127,10 @@ public class EdgeDB extends Persistor {
             for (int i=0;i<edge.key.length;i++)
                 pstmt.setInt(2+i,edge.key[i]);
             ByteBuffer buff = ByteBuffer.allocate(edge.dt.length * 4 * 2);
-            for (int i=0;i<edge.dt.length;i++)
+            for (int i=0;i<edge.dt.length;i++) {
                 buff.putLong(edge.dt[i]);
+				System.out.println(edge.dt[i]);
+            }
             pstmt.setBytes(7,buff.array());
             pstmt.addBatch();
         }
@@ -149,13 +154,16 @@ public class EdgeDB extends Persistor {
             while (rs.next()) {
                 if (asofdt > 0) {
                     boolean status = false;
-                    Blob blob = rs.getBlob("dt");
-                    if (blob != null && blob.length() > 0) {
-                        ByteBuffer buff = ByteBuffer.wrap(blob.getBytes(1,(int)blob.length()));
-                        while (buff.hasRemaining() && asofdt >= buff.getInt())
-                            status = !status;
-                        if (!status) continue;
-                    }
+	                byte[] bytes = rs.getBytes("dt");
+	                if (bytes == null) continue;
+	                ByteBuffer buff = ByteBuffer.wrap(bytes);
+					while (buff.hasRemaining()) {
+						 int dt = buff.getInt();
+						 System.out.println(dt+":"+asofdt);
+						 if (asofdt < dt) break; 
+						 status = !status;
+					}
+                    if (!status) continue;
                 }
                 out.add(rs.getInt("lk"));
                 if (includeObj)
@@ -180,16 +188,15 @@ public class EdgeDB extends Persistor {
             while (rs.next()) {
                 if (asofdt > 0) {
                     boolean status = false;
-                    Blob blob = rs.getBlob("dt");
-                    if (blob != null && blob.length() > 0) {
-                        ByteBuffer buff = ByteBuffer.wrap(blob.getBytes(1,(int)blob.length()));
-                        while (buff.hasRemaining()) {
-                            long l =  buff.getLong();
-                            if (asofdt >= Utils.msb(l) && asofdt <= Utils.lsb(l))
-                                status = true;
-                        }
-                        if (!status) continue;
-                    }
+	                byte[] bytes = rs.getBytes("dt");
+	                if (bytes == null) continue;
+	                ByteBuffer buff = ByteBuffer.wrap(bytes);
+					while (buff.hasRemaining()) {
+						 int dt = buff.getInt();
+						 if (asofdt < dt) break; 
+						 status = !status;
+					}
+                    if (!status) continue;
                 }
                 out.add(Utils.makelong(rs.getInt(pkidx),rs.getInt(fkidx)));
             }
@@ -201,6 +208,7 @@ public class EdgeDB extends Persistor {
 		return out;
 	}
 
+	 
     private String readSql(int[] from, int[] to)
     {
         String filter = "";
@@ -314,7 +322,7 @@ public class EdgeDB extends Persistor {
     {
         public int lk;
         public int[] key;
-        public long[] dt;
+        public int[] dt;
         //public int[] from;
         //public int[] to;
 
@@ -324,20 +332,21 @@ public class EdgeDB extends Persistor {
             key = new int[5];
             for (int i=0;i<5;i++)
                 key[i] = rs.getInt("k"+i);
-
-            Blob blob = rs.getBlob("dt");
-            int len = (blob == null)? 0:(int)blob.length();
-            int size = (len+7)/8;
-            if (size == 0) return;
-            dt   = new long[size];
-            ByteBuffer buff = ByteBuffer.wrap(blob.getBytes(1,(int)blob.length()));
-            for (int i=0;i<dt.length;i++)
-            {
-                if (buff.hasRemaining())
-                    dt[i] = Utils.makelong(buff.getInt(),buff.getInt());
-            }
+            byte[] bytes = rs.getBytes("dt");
+            if (bytes == null) return;
+            ByteBuffer buff = ByteBuffer.wrap(bytes);
+			dt = new int[bytes.length/4];
+			for (int i=0;i<dt.length;i++)
+				dt[i] = buff.getInt();
         }
 
+		public String toString() {
+			String s = ""+lk;
+			for (int k:key) s+=","+k;
+			for (int l:dt)  s+=","+l;
+			return s;
+		}
+		
         //pattern match function
         public boolean matchKey(int[] pattern) {
             for (int i=0;i<pattern.length;i++)
@@ -350,33 +359,19 @@ public class EdgeDB extends Persistor {
             return true;
         }
 
-        public void addTime(int ifrom, int ito)
+        public void addTime(int ifrom, int ito, TreeMap<Integer,Integer> temp)
         {
-            if (ito < ifrom) return;
-            int from = 0, cnt = (dt == null)? 1:1+dt.length;
-            long[] ndt = new long[cnt];
-            for (int i=0;i<cnt-1;i++) ndt[i] = dt[i];
-            ndt[cnt-1] = Utils.makelong(ifrom,ito);
-            Arrays.sort(ndt);
-            cnt = 0; //Reset to compute # of non-overlapping validity periods
-            for (int i=0;i<ndt.length-1;i++)
-            {
-                int f0 = Utils.msb(ndt[i]);
-                int l0 = Utils.lsb(ndt[i]);
-                int f1 = Utils.msb(ndt[i+1]);
-                int l1 = Utils.lsb(ndt[i+1]);
-                if (from != Math.min(f0,f1))
-                    cnt++;
-                from = Math.min(f0,f1);
-                if (f1 <= l1)
-                    ndt[i+1] = ndt[i] = Utils.makelong(from,Math.max(l0,l1));
-            }
-            //Now all records with same fromdt are duplicates
-            //Only use the latest among them has the correct to_dt
-            dt = new long[cnt];cnt = 0;
-            for (int i=0;i<ndt.length-1;i++)
-                if (Utils.msb(ndt[i]) != Utils.msb(ndt[i+1]))
-                    dt[cnt++] = ndt[i];
-        }
+			temp.clear();
+			for (int d:dt) temp.put(d,temp.size()%2);
+			temp.put(ifrom,0);
+			temp.put(ito,1);
+			int last = 1;
+			for(Iterator<Map.Entry<Integer,Integer>> it = temp.entrySet().iterator(); it.hasNext(); ) {
+			    Map.Entry<Integer,Integer> entry = it.next();
+			    if(entry.getValue() == last) it.remove();
+				last = (last+1)%2;
+			}
+			dt = temp.keySet().stream().mapToInt(Number::intValue).toArray();
+		}
     }
 }

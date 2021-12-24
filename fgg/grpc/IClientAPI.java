@@ -53,7 +53,7 @@ public interface IClientAPI
 	public int getObjPK(GraphItem.Node node, String strkey);
 
 	//Returns linkkeys. Performs partial matches ignoring any objid[idx] set to 0.
-	public List<Integer> getLinkKeys(GraphItem.Edge edge, int[] objid);
+	public List<Integer> getLinkKeys(GraphItem.Edge edge, int[] objid, int asofdt);
     public Map<Integer,int[]> getLink2Obj(GraphItem.Edge edge, int[] objid);
     
 	//Returns FeatureStreamListener to return node data for given a objkey.

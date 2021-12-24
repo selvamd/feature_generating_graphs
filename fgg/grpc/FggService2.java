@@ -202,6 +202,7 @@ public class FggService2 extends FggDataServiceGrpc.FggDataServiceImplBase
 	{
 		FggDataServiceOuterClass.FggMsg.Builder bldr = create(request);
 		LinkType type 	= LinkType.valueOf(getParamInt(request, "edgekey"));
+		int asofdt = getParamInt(request, "asofdt");
         boolean includeObj = getParam(request, "includeobj").equalsIgnoreCase("TRUE");
 		if (type == null) {
 			bldr.addValues(addparam("STATUS","Invalid edgekey"));
@@ -209,7 +210,7 @@ public class FggService2 extends FggDataServiceGrpc.FggDataServiceImplBase
 			int[] objkeys = new int[type.maxnodes()];
 			for (int i=0;i<objkeys.length;i++)
 				objkeys[i] = getParamInt(request, "objkey"+i);
-			Set<Integer> links = Cache2.getLinks(type, objkeys, includeObj, new HashSet<Integer>());
+			Set<Integer> links = Cache2.getLinks(type, objkeys, asofdt, includeObj, new HashSet<Integer>());
 			links.forEach((k) -> bldr.addOutkey(k));
 		}
 		return bldr.build();

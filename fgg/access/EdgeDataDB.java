@@ -230,9 +230,9 @@ public class EdgeDataDB extends Persistor {
             link  = rs.getInt("link");
             attr = rs.getInt("attr");
             fld = new Field(FieldMeta.lookup(attr));
-            Blob blob = rs.getBlob("val");
-            if (blob == null || blob.length() <= 0) return;
-            ByteBuffer buff = ByteBuffer.wrap(blob.getBytes(1,(int)blob.length()));
+            byte[] bytes = rs.getBytes("val");
+            if (bytes == null) return;
+            ByteBuffer buff = ByteBuffer.wrap(bytes);
             fld.deserialize(buff);
         }
     }

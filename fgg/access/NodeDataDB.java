@@ -177,7 +177,7 @@ public class NodeDataDB extends Persistor
                 Field fld = new Field(FieldMeta.lookup(rs.getInt("attr")));
                 byte[] bytes = rs.getBytes("val");
                 if (bytes == null) continue;
-                ByteBuffer buff = ByteBuffer.wrap(rs.getBytes("val"));
+                ByteBuffer buff = ByteBuffer.wrap(bytes);
                 fld.deserialize(buff);
                 Logger.log(Logger.GET_NODE_DATA,
                     "NodeData read ["+rs.getInt("obj")+","+rs.getInt("attr")+"]=" + fld);
@@ -248,9 +248,9 @@ public class NodeDataDB extends Persistor
             obj  = rs.getInt("obj");
             attr = rs.getInt("attr");
             fld = new Field(FieldMeta.lookup(attr));
-            Blob blob = rs.getBlob("val");
-            if (blob == null || blob.length() <= 0) return;
-            ByteBuffer buff = ByteBuffer.wrap(blob.getBytes(1,(int)blob.length()));
+            byte[] bytes = rs.getBytes("val");
+            if (bytes == null) return;
+            ByteBuffer buff = ByteBuffer.wrap(bytes);
             fld.deserialize(buff);
         }
     }

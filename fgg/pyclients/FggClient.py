@@ -204,10 +204,11 @@ class FggClient:
                 v = FeatureData(None)
         return res
 
-    def getLinkKeys(self, edgeid, objkeys):
+    def getLinkKeys(self, edgeid, objkeys, asofdt):
         msg = FggDataService_pb2.FggMsg()
         msg.request = MsgType.GET_LINK_KEYS
         FggClient.AddParam(msg, 'edgekey', edgeid)
+        FggClient.AddParam(msg, 'asofdt', str(asofdt))
         FggClient.AddParam(msg, 'includeobj', 'false')
         for i in range(len(objkeys)):
             FggClient.AddParam(msg, 'objkey'+str(i), objkeys[i])

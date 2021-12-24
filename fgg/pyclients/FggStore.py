@@ -80,7 +80,7 @@ class FggStore:
         return self.client.getLink2Obj(edgekey, objids)
 
     def getLinks(self, edgekey, objids):
-        return self.client.getLinkKeys(edgekey, objid)
+        return self.client.getLinkKeys(edgekey, objid, 0)
 
     def setObject(self, objectName, objpk, key):
         info = GraphItem.findNode(objectName)

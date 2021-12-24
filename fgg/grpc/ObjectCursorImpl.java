@@ -72,7 +72,7 @@ public class ObjectCursorImpl implements ObjectCursor
         int[] objid = new int[2];
         objid[edge.index(node)] = result[idx];
         
-        List<Integer> fks = client.getLinkKeys(edge, objid);
+        List<Integer> fks = client.getLinkKeys(edge, objid, asofdt);
         int[] result = new int[fks.size()];
         int index = 0;
         for (int key:fks)
@@ -93,7 +93,7 @@ public class ObjectCursorImpl implements ObjectCursor
         int[] objid = new int[2];
         objid[edge.index(node)] = result[idx];
         
-        List<Integer> fks = client.getLinkKeys(edge, objid);
+        List<Integer> fks = client.getLinkKeys(edge, objid, asofdt);
         int[] result = new int[fks.size()];
         int index = 0;
         for (int key:fks)
