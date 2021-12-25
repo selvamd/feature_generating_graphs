@@ -70,7 +70,7 @@ class FggCursor:
         return self.result[self.idx]
 
     def __fetch__(self):
-        if self.idx == len(self.result):
+        if self.idx < 0 or self.idx == len(self.result):
             return
         id = self.result[self.idx]
         if self.edge is not None and len(self.attrs) > 0:

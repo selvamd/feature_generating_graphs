@@ -102,6 +102,7 @@ public class EdgeDB extends Persistor {
             for (int i=0;i<keys.length;i++)
                 edge.key[i] = keys[i];
         }
+		System.out.println(edge);
         edge.addTime(fromdt, todt, buff);
         maxkey = Math.max(maxkey,edge.lk);
         edges.put(edge.lk,edge);
@@ -126,11 +127,9 @@ public class EdgeDB extends Persistor {
             pstmt.setInt(1,edge.lk);
             for (int i=0;i<edge.key.length;i++)
                 pstmt.setInt(2+i,edge.key[i]);
-            ByteBuffer buff = ByteBuffer.allocate(edge.dt.length * 4 * 2);
-            for (int i=0;i<edge.dt.length;i++) {
-                buff.putLong(edge.dt[i]);
-				System.out.println(edge.dt[i]);
-            }
+            ByteBuffer buff = ByteBuffer.allocate(edge.dt.length * 4);
+            for (int i=0;i<edge.dt.length;i++) 
+                buff.putInt(edge.dt[i]);
             pstmt.setBytes(7,buff.array());
             pstmt.addBatch();
         }
@@ -159,7 +158,7 @@ public class EdgeDB extends Persistor {
 	                ByteBuffer buff = ByteBuffer.wrap(bytes);
 					while (buff.hasRemaining()) {
 						 int dt = buff.getInt();
-						 System.out.println(dt+":"+asofdt);
+						 System.out.println(dt+":"+asofdt+":"+status);
 						 if (asofdt < dt) break; 
 						 status = !status;
 					}
@@ -336,14 +335,14 @@ public class EdgeDB extends Persistor {
             if (bytes == null) return;
             ByteBuffer buff = ByteBuffer.wrap(bytes);
 			dt = new int[bytes.length/4];
-			for (int i=0;i<dt.length;i++)
+			for (int i=0;i<dt.length;i++) 
 				dt[i] = buff.getInt();
         }
 
 		public String toString() {
 			String s = ""+lk;
-			for (int k:key) s+=","+k;
-			for (int l:dt)  s+=","+l;
+			for (int k:key) s+=",k="+k;
+			for (int l:dt)  s+=",d="+l;
 			return s;
 		}
 		
@@ -362,7 +361,9 @@ public class EdgeDB extends Persistor {
         public void addTime(int ifrom, int ito, TreeMap<Integer,Integer> temp)
         {
 			temp.clear();
-			for (int d:dt) temp.put(d,temp.size()%2);
+			for (int d:dt)
+				if (d > 0) 
+					temp.put(d,temp.size()%2);
 			temp.put(ifrom,0);
 			temp.put(ito,1);
 			int last = 1;
