@@ -49,14 +49,15 @@ class FeatureData:
 
     def xmits(self):
         results = []
-        results.append(FggDataService_pb2.FggData(field=XMIT.KEYSEQ,int_value=self.keyseq[0]))
         attr = GraphItem.findByPK(self.attrkey)
 
         dtype = None
         if isinstance(attr, NodeAttr) or isinstance(attr, EdgeAttr):
-            dtype = getattr(attr,'dtypeEnum')
+            dtype = attr.dtype
         else:
             return results
+
+        results.append(FggDataService_pb2.FggData(field=XMIT.KEYSEQ,int_value=self.keyseq[0]))
 
         lastval = None
         for key in sorted(self.date2value):
@@ -66,7 +67,7 @@ class FeatureData:
                     results.append(FggDataService_pb2.FggData(field=XMIT.VALUE,str_value=self.date2value[key]))
                 elif dtype == DataType.LONG:
                     results.append(FggDataService_pb2.FggData(field=XMIT.VALUE,long_value=self.date2value[key]))
-                elif dtype == DataType.LONG:
+                elif dtype == DataType.DOUBLE:
                     results.append(FggDataService_pb2.FggData(field=XMIT.VALUE,dbl_value=self.date2value[key]))
                 else:
                     results.append(FggDataService_pb2.FggData(field=XMIT.VALUE,int_value=self.date2value[key]))

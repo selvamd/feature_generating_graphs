@@ -145,8 +145,8 @@ class FggClient:
         msg.request = MsgType.ADD_ATTR
         FggClient.AddParam(msg, 'nodeedgeid', str(nodeedgeid))
         FggClient.AddParam(msg, 'attrname', name)
-        FggClient.AddParam(msg, 'datatype', dtype)
-        FggClient.AddParam(msg, 'fieldtype', fldtype)
+        FggClient.AddParam(msg, 'datatype', dtype.name)
+        FggClient.AddParam(msg, 'fieldtype', fldtype.name)
         FggClient.AddParam(msg, 'attrsize', str(size))
         it = self.stub.queryData(msg)
         if len(it.outkey) == 0:
@@ -228,10 +228,12 @@ class FggClient:
 
     def publish(self, features):
         input = []
+
         for feature in features:
             for xmit in feature.xmits():
                 input.append(xmit)
-        it = stub.persistData(input)
+
+        it = self.stub.persistData(iter(input))
         for v in it.values:
             if v.name == 'UPDATED':
                 return v.value

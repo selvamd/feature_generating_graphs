@@ -7,6 +7,9 @@ class GraphItem:
         self.typename = name
         GraphItem.graphitems.append(self)
 
+    def id(self): return self.typeid
+    def name(self): return self.typename 
+
     def __str__(self):
         return str(self.typeid) + ':' + self.typename
 

@@ -390,7 +390,6 @@ public class FggService2 extends FggDataServiceGrpc.FggDataServiceImplBase
 
 				if (feature.isFullXmit())
 				{
-                    //System.out.println(feature);
 					datalist.add(feature);
 					feature = null;
 				}

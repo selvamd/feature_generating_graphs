@@ -55,7 +55,7 @@ class FggStore:
         info = GraphItem.findNode(objectName)
         if info is None: return None;
         res = []
-        for key in client.getObjKeys(info.typeid, None):
+        for key in self.client.getObjKeys(info.typeid, None):
             res.append(key)
         if selects is None:
             for attr in GraphItem.findNodeAttrs(info.typeid):
@@ -106,20 +106,3 @@ class FggStore:
             print(node.typename + "(" + str(node.typeid) + ")")
             for attr in GraphItem.findEdgeAttrs(node.typeid):
                 print('\t',attr.typename, attr.dtype)
-
-if __name__ == '__main__':
-    client = FggClient('localhost',33789)
-    client.connect()
-    store = FggStore(client)
-    store.printSchema()
-    cur = store.query("Customer","cust_key,age","")
-    while cur.next():
-        act = cur.link("Account", 20170101)
-        act.selectAttrs("acct_key,balance")
-        while act.next():
-            bal = act.get("balance",20190101)
-            key = act.get("acct_key",20190101)
-            print("\t\t",key,bal)
-        key = cur.get("cust_key",20190101)
-        age = cur.get("age",20190101)
-        print(key,age)
