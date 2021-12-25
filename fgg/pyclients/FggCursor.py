@@ -63,10 +63,10 @@ class FggCursor:
         self.__fetch__()
         return True
 
-    def getObjectPk(self):
+    def getObjectPK(self):
         return self.result[self.idx]
 
-    def getLinkPk(self):
+    def getLinkPK(self):
         return self.result[self.idx]
 
     def __fetch__(self):

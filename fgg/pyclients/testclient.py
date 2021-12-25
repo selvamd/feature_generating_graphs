@@ -5,23 +5,38 @@ from FggCursor import *
 from FggStore import *
 
 if __name__ == '__main__':
+
     client = FggClient('localhost',33789)
     client.connect()
     store = FggStore(client)
 
     store.printSchema()
 
-    node = GraphItem.findNode("Customer")
-    store.addAttr(node.id(),"age", DataType.INT, FieldType.CORE, 4)
+    cust = GraphItem.findNode("Customer")
+    acct = GraphItem.findNode("Account")
+    ac_cs_rel = GraphItem.findDefaultEdge([cust.id(),acct.id()])
+
+    #create attr
+    store.addAttr(cust.id(),"age", DataType.INT, FieldType.CORE, 4)
+
+    #create obj
     store.setObject("Customer", 100, "200100")
 
+    #update attr
     cur = store.query("Customer","cust_key,age","")
     while cur.next():
         cur.set("age", 20150101, "100")
         cur.publish()
         break
 
-    '''
+    #setup relationship
+    actcur = store.query("Account","acct_key","")
+    custkey = store.getObjectPK("Customer","200100")
+    while actcur.next():
+        store.setLink(ac_cs_rel.id(),[custkey,actcur.getObjectPK()], 20150101,99991231)
+        break
+
+    #navigate relationships
     cur = store.query("Customer","cust_key,age","")
     while cur.next():
         act = cur.link("Account", 20170101)
@@ -33,4 +48,3 @@ if __name__ == '__main__':
         key = cur.get("cust_key",20190101)
         age = cur.get("age",20190101)
         print(key,age)
-    '''

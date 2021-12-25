@@ -70,7 +70,7 @@ class FggStore:
     def addAttr(self, typekey, name, dtype, ftype, size):
         self.client.addAttr(typekey, name, dtype, ftype, size)
 
-    def getObjectPk(self, objectName, key):
+    def getObjectPK(self, objectName, key):
         info = GraphItem.findNode(objectName)
         if info is None: return -1
         return self.client.getObjPK(info.typeid, key)

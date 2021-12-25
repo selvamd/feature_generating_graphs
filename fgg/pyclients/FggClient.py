@@ -222,7 +222,7 @@ class FggClient:
         FggClient.AddParam(msg, 'fromdt', fromdt)
         FggClient.AddParam(msg, 'todt', todt)
         for i in range(len(objkeys)):
-            FggClient.AddParam(msg, 'nodekey'+str(i), objkeys[i])
+            FggClient.AddParam(msg, 'objkey'+str(i), objkeys[i])
         it = self.stub.queryData(msg)
         return it.outkey[0]
 
