@@ -24,8 +24,8 @@ public class NodeKeyDB extends Persistor
     private int maxkey = 0;
     
     //Donot expect overlap between alternate external keys
-    private Map<String,NodeKey> nodekeys;
-    private Map<String,NodeKey> inodekeys;
+    private Map<String,NodeKey> nodekeys;  //str->obj
+    private Map<String,NodeKey> inodekeys; //objkey+'/'+alt->obj
     
     public NodeKeyDB(CBOType type) 
     {
@@ -213,7 +213,7 @@ public class NodeKeyDB extends Persistor
     
     private void createTable() throws Exception 
     {
-        //onoffdtcsv - For index 0, Activation is ON, for the rest it toggles 
+        //pk objkey, alt - altnum, hk - hash, str -> value 
         String sql = "CREATE TABLE IF NOT EXISTS " + table + " (\n"
                 + "	pk integer,\n"
                 + "	alt integer,\n"

@@ -13,7 +13,7 @@ public class Cache2
 	private static Map<CBOType,List<NodeDataDB>> nodevalues;
 	private static Map<LinkType,List<EdgeDataDB>> edgevalues;
 
-	public static void init() 
+	public static void init()
     {
         edges = new HashMap<LinkType,EdgeDB>();
         nodes = new HashMap<CBOType,NodeKeyDB>();
@@ -49,7 +49,7 @@ public class Cache2
             list.add(new NodeDataDB(type,0,1));
 		}
 
-		for (LinkType ltype:LinkType.values()) 
+		for (LinkType ltype:LinkType.values())
         {
             edges.put(ltype,new EdgeDB(ltype));
             List<EdgeDataDB> list = null;
@@ -63,7 +63,7 @@ public class Cache2
 		//////////////////////// Initialized valid row dates //////////////////
 		dates = new TreeSet<Integer>();
 		int dt = Utils.mindate(), today = Integer.parseInt(Persistor.today().replaceAll("-", ""));
-		while (dt < today) 
+		while (dt < today)
         {
             dates.add(dt);
             dt = Persistor.addDate(dt,1);
@@ -71,7 +71,7 @@ public class Cache2
 		System.out.println("Loaded valid history dates");
 	}
 
-	public static void flush() 
+	public static void flush()
     {
         try {
             EnumGroup.flush();
@@ -90,7 +90,7 @@ public class Cache2
             e.printStackTrace();
         }
     }
-    
+
 	public static SortedSet<Integer> month_dates()
     {
 		SortedSet<Integer> mdates = new TreeSet<Integer>();
@@ -110,92 +110,134 @@ public class Cache2
 
     //No modification on static int key, but str_key can be updated via this API
 	public static int setObjectKey(CBOType type, int objkey, int altKeyNum, String str_key)
-	{ 
+	{
         Logger.log(Logger.SET_NODE_DATA, "setObjectKey("+type+","+objkey+","+altKeyNum + ","+str_key+")");
         //System.out.println();
         Set<Integer> attrs = FieldMeta.getAttrKeys(type, altKeyNum, new TreeSet<Integer>());
-        
+
         String[] val = str_key.split("/");
-        if (attrs.size() > 1 && attrs.size() != val.length) 
+        if (attrs.size() > 1 && attrs.size() != val.length)
             return -1; //invalid key
-        
+
         NodeKeyDB db = nodes.get(type);
-        if (objkey == -1) 
+        if (objkey == -1)
         {
             objkey = db.read(str_key);
             if (objkey < 0)
                 objkey = db.nextkey();
-        } 
+        }
         db.upsert(objkey, altKeyNum, str_key, db.read(objkey,altKeyNum));
 
         int idx = 0;
         for (int attr:attrs) {
-            for (NodeDataDB dbd:nodevalues.get(type)) 
+            for (NodeDataDB dbd:nodevalues.get(type))
                 dbd.upsert(objkey,attr,Utils.mindate(),val[idx]);
             idx++;
         }
         return objkey;
 	}
 
-	public static String getObjectKey(CBOType type, int key) 
-    { 
-        return nodes.get(type).read(key,1); 
+	public static String getObjectKey(CBOType type, int key)
+    {
+        return nodes.get(type).read(key,1);
     }
 
     //Derives match->objkey[] for a given node (CBOType)
-	public static Map<Integer,Integer> getObjectKey(CBOType type, String match, Map<Integer,Integer> out) 
-    { 
-        return nodes.get(type).readAll(match,out); 
+	//variables on match expr string can be strkey, objkey or any attr prefixed with # for str and $ for num
+	public static Map<Integer,Integer> getObjectKey(CBOType type, String match, Map<Integer,Integer> out)
+    {
+		System.out.println("match = "+match);
+		Map<String,Object> eval = new HashMap<String,Object>();
+		Map<Integer,Field> dbfld = new HashMap<Integer,Field>(); //Fld obj for singledb
+		Map<String,Map<Integer,Field>> cols = new HashMap<String,Map<Integer,Field>>();
+
+		//get all keys
+		nodes.get(type).readAll(null,out);
+
+		//parse expr and vars to eval
+		Expr expr = (match == null || match.trim().length() == 0)? null:Expr.getExpr(match);
+		if (expr == null) return out;
+
+		Set<String> s = expr.getVars(new HashSet<String>());
+
+		//Load all values
+		for (String f:s) {
+			if (f.equals("strkey") || f.equals("objkey")) continue;
+			FieldMeta m = FieldMeta.lookup(type, f);
+			if (m == null) return out;
+			cols.put(f,new HashMap<Integer,Field>());
+			for (NodeDataDB db: nodevalues.get(type))
+				cols.get(f).putAll(db.readCol(m.index(), dbfld));
+		}
+
+		//Iterate all objkeys and remove anything that needs to be filtered
+		for (Iterator<Map.Entry<Integer,Integer>> it = out.entrySet().iterator(); it.hasNext();)
+		{
+			Map.Entry<Integer,Integer> ent = it.next();
+			eval.clear();
+			eval.put("strkey", nodes.get(type).read(ent.getKey(), ent.getValue()));
+			eval.put("objkey", ent.getKey());
+			for (String f:s) {
+				if (f.equals("strkey") || f.equals("objkey")) continue;
+				Field fld = cols.get(f).get(ent.getKey());
+				Object val = (fld == null)? null: fld.spoto();
+				if (val != null) eval.put(f, val);
+			}
+			if (!expr.filter(eval))
+				it.remove();
+		}
+		System.out.println("Found objkeys = " + out.size() );
+        return out;
     }
-    
+
     //Derives extkey->objkey for a given node (CBOType)
-	public static int getObjectKey(CBOType type, String key) 
-    { 
-        return nodes.get(type).read(key); 
+	public static int getObjectKey(CBOType type, String key)
+    {
+        return nodes.get(type).read(key);
     }
 
     //Derives linkkey->objkey for a given node (CBOType)
-	public static int getObjectKey(LinkType ltype, CBOType ctype, int nodecnt, int link) 
-    { 
+	public static int getObjectKey(LinkType ltype, CBOType ctype, int nodecnt, int link)
+    {
         return edges.get(ltype).objkey(ctype,nodecnt,link);
     }
 
     //All matching links given partial obj keys
-	public static Set<Integer> getLinks(LinkType type, int[] objkeys, int asofdt, boolean includeObj, Set<Integer> out) 
+	public static Set<Integer> getLinks(LinkType type, int[] objkeys, int asofdt, boolean includeObj, Set<Integer> out)
     {
         return edges.get(type).read(objkeys, asofdt, includeObj, out);
     }
 
-	public static int addLink(LinkType type, int[] objkeys, int fromdt, int todt) 
+	public static int addLink(LinkType type, int[] objkeys, int fromdt, int todt)
     {
         return edges.get(type).upsert(objkeys, fromdt, todt);
 	}
 
-    public static void setFieldData(int obj, Field f) 
+    public static void setFieldData(int obj, Field f)
     {
         Logger.log(Logger.SET_NODE_DATA, "setFieldData("+obj+","+f+")");
-        
+
         CBOType type = CBOType.valueOf(f.meta().key());
         if (type != null) {
-            for (NodeDataDB db:nodevalues.get(type)) 
+            for (NodeDataDB db:nodevalues.get(type))
                 db.upsert(obj,f);
         } else {
             LinkType ltype = LinkType.valueOf(f.meta().key());
-            for (EdgeDataDB db:edgevalues.get(ltype)) 
+            for (EdgeDataDB db:edgevalues.get(ltype))
                 db.upsert(obj,f);
         }
     }
 
-    public static Map<Integer,Field> getLinkData(LinkType type, int obj, Map<Integer,Field> out) 
+    public static Map<Integer,Field> getLinkData(LinkType type, int obj, Map<Integer,Field> out)
     {
-        for (EdgeDataDB db:edgevalues.get(type)) 
+        for (EdgeDataDB db:edgevalues.get(type))
             db.readRow(obj,out);
         return out;
     }
 
-    public static Map<Integer,Field> getObjectData(CBOType type, int obj, Map<Integer,Field> out) 
+    public static Map<Integer,Field> getObjectData(CBOType type, int obj, Map<Integer,Field> out)
     {
-        for (NodeDataDB db:nodevalues.get(type)) 
+        for (NodeDataDB db:nodevalues.get(type))
             db.readRow(obj,out);
         return out;
     }

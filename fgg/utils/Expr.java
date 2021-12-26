@@ -50,14 +50,19 @@ public class Expr
 		{
 			//Expr can only be a single value or single variable at this point
 			Expr e = new Expr();
-			if (expr.charAt(0) != '$')
+			if (expr.charAt(0) == '$') {
+				e.var = expr.substring(1);
+			}
+			else if (expr.charAt(0) == '#') {
+				e.var = expr.substring(1);
+				e.isstring = true;
+			}
+			else 
 			{
 				e.isstring = expr.startsWith("'");
 				e.sval = (e.isstring)? expr.substring(1,expr.length()-1):expr;
 				e.val = parseDouble(e.sval);
 			}
-			else
-				e.var = expr.substring(1);
 
 			return e;
 		}
@@ -194,6 +199,17 @@ public class Expr
 		return fields;
 	}
 
+	public boolean filter(Record rec, int asof) {
+		return false;
+	}
+
+	public boolean filter(Map<String,Object> values) {
+		if (eval(values))
+			if (this.val == 1)
+				return true;
+		return false;
+	}
+
 	public boolean validate(Set<String> fields)
 	{
 		if (this.oper != null)
@@ -206,30 +222,12 @@ public class Expr
 		return true;
 	}
 
-	public boolean filter(Record rec, int asofdt) {
-		if (_eval(null, rec, asofdt)) {
-			//System.out.println(""+(this.val == 1));
-			return (this.val == 1);
-		}
-		return false;
-	}
-
-	public boolean eval(Map<String,Object> values) {
-		return _eval(values, null,0);
-	}
-
 	//Evaluates the expression given all the variables
-	private boolean _eval(Map<String,Object> values, Record rec, int asofdt)
+	public boolean eval(Map<String,Object> values)
 	{
 		if (this.var != null)
 		{
-			Object o = null;
-			if (rec != null) {
-				Field f = rec.field(this.var);
-				if (f == null) return false;
-				o = f.geto(asofdt);
-			}
-			else o = values.get(this.var);
+			Object o = values.get(this.var);
 			if (o == null) return false;
 			this.sval = o.toString();
 			if (!(o instanceof String))
@@ -239,8 +237,8 @@ public class Expr
 		}
 		if (this.oper != null)
 		{
-			if (!this.lhs._eval(values,rec,asofdt)) return false;
-			if (!this.rhs._eval(values,rec,asofdt)) return false;
+			if (!this.lhs.eval(values)) return false;
+			if (!this.rhs.eval(values)) return false;
 			if (this.oper == Oper.ADD) this.val = this.lhs.val + this.rhs.val;
 			if (this.oper == Oper.SUB) this.val = this.lhs.val - this.rhs.val;
 			if (this.oper == Oper.MUL) this.val = this.lhs.val * this.rhs.val;
@@ -285,13 +283,14 @@ public class Expr
 
 	public static void main(String[] args)
 	{
-		Expr expr = getExpr("((($x / 2) >= 10) | ((($y / 2) + 3) <= 4.5))");
+		//Expr expr = getExpr("((($x / 2) >= 10) | ((($y / 2) + 3) <= 4.5))");
 		//Expr expr = getExpr("(($x < 3) & ($y > 3)) | ($z < 3)");
 		//Expr expr = getExpr("$x & ($y | $z)");
+		Expr expr = getExpr("(#x < #y)");
 
 		Map<String,Object> values = new HashMap<String,Object>();
-		values.put("x",new Integer(12));
-		values.put("y",new Long(2));
+		values.put("x","new Integer(12)");
+		values.put("y","new Long(2)");
 		if (expr.eval(values))
 			System.out.println(expr.val);
 		values.put("y",new Long(3));

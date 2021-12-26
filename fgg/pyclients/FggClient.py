@@ -87,20 +87,20 @@ class FggClient:
         return attr
 
     def getObjPK(self, nodeid, pk):
-        obj = self.getObjKeys(nodeid, pk)
+        obj = self.getObjKeys(nodeid, "(#strkey == '" + pk + "')")
         return next(iter(obj.keys()))
 
     def getObjKeys(self, nodeid, matchkey):
         msg = FggDataService_pb2.FggMsg()
         msg.request = MsgType.GET_OBJ_KEYS
         FggClient.AddParam(msg, 'nodekey', nodeid)
-        FggClient.AddParam(msg, 'matchkey', matchkey)
+        FggClient.AddParam(msg, 'match', matchkey)
         it = self.stub.queryData(msg)
         result = {}
         for v in it.outkey:
             result[v] = 1
         for v in it.values:
-            if v.name != 'nodekey' and v.name != 'matchkey':
+            if v.name != 'nodekey' and v.name != 'match':
                 result[v.name] = v.value
         return result
 
