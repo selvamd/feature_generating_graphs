@@ -9,8 +9,10 @@ from FggCursor import *
 
 class FggStore:
 
-    def __init__(self, cli):
-        self.client = cli
+    def __init__(self, host = 'localhost', port = 33789):
+        client = FggClient(host,port)
+        client.connect()
+        self.client = client
 
     #Returns all the object names in the store
     def getObjectNames(self):
@@ -51,7 +53,7 @@ class FggStore:
         self.client.flush()
 
     #Runs a query on single object collection and returns a cursor to iterate all the objects
-    def query(self, objectName, selects, filter, asofdt):
+    def query(self, objectName, selects, filter = "", asofdt = 0):
         info = GraphItem.findNode(objectName)
         if info is None: return None;
         res = []

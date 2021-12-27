@@ -6,15 +6,14 @@ from FggStore import *
 
 if __name__ == '__main__':
 
-    client = FggClient('localhost',33789)
-    client.connect()
-    store = FggStore(client)
-
+    # Create graphstore client
+    store = FggStore()
     store.printSchema()
 
+    # Lookup objects and relationships
     cust = GraphItem.findNode("Customer")
     acct = GraphItem.findNode("Account")
-    ac_cs_rel = GraphItem.findDefaultEdge([cust.id(),acct.id()])
+    acctcustrel = GraphItem.findDefaultEdge([cust.id(),acct.id()])
 
     #create attr
     store.addAttr(cust.id(),"age", DataType.INT, FieldType.CORE, 4)
@@ -23,17 +22,17 @@ if __name__ == '__main__':
     store.setObject("Customer", 100, "200100")
 
     #update attr
-    cur = store.query("Customer","cust_key,age","", 0)
+    cur = store.query("Customer","cust_key,age")
     while cur.next():
         cur.set("age", 20150101, "100")
         cur.publish()
         break
 
     #setup relationship
-    actcur = store.query("Account","acct_key","", 0)
+    actcur = store.query("Account","acct_key")
     custkey = store.getObjectPK("Customer","200100")
     while actcur.next():
-        store.setLink(ac_cs_rel.id(),[custkey,actcur.getObjectPK()], 20150101,99991231)
+        store.setLink(acctcustrel.id(),[custkey,actcur.getObjectPK()], 20150101,99991231)
         break
 
     #navigate relationships
