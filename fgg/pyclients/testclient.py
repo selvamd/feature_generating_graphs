@@ -37,9 +37,9 @@ if __name__ == '__main__':
         break
 
     #navigate relationships
-    cur = store.query("Customer","cust_key,age","($age > 40)")
+    cur = store.query("Customer","cust_key,age","($age > 53)")
     while cur.next():
-        act = cur.link("Account", 20170101)
+        act = cur.link("Account", 20160101)
         act.selectAttrs("acct_key,balance")
         while act.next():
             bal = act.get("balance",20190101)

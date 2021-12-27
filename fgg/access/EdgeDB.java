@@ -23,7 +23,7 @@ public class EdgeDB extends Persistor {
     private String table;
     private Map<Integer,Edge> edges;
     private int maxkey = 0;
-	private TreeMap<Integer,Integer> buff; 
+	private TreeMap<Integer,Integer> buff;
 
     public EdgeDB(LinkType type) {
         this.type = type;
@@ -76,7 +76,7 @@ public class EdgeDB extends Persistor {
 		out.clear();
         read(keys, keys, asofdt, includeObj, out);
         for (Edge e:edges.values()) {
-            if (e.matchKey(keys)) {
+            if (e.matchKey(keys) && e.validdt(asofdt)) {
                 out.add(e.lk);
                 if (includeObj)
                     for (int k:e.key)
@@ -102,7 +102,7 @@ public class EdgeDB extends Persistor {
             for (int i=0;i<keys.length;i++)
                 edge.key[i] = keys[i];
         }
-		System.out.println(edge);
+		//System.out.println(edge);
         edge.addTime(fromdt, todt, buff);
         maxkey = Math.max(maxkey,edge.lk);
         edges.put(edge.lk,edge);
@@ -128,7 +128,7 @@ public class EdgeDB extends Persistor {
             for (int i=0;i<edge.key.length;i++)
                 pstmt.setInt(2+i,edge.key[i]);
             ByteBuffer buff = ByteBuffer.allocate(edge.dt.length * 4);
-            for (int i=0;i<edge.dt.length;i++) 
+            for (int i=0;i<edge.dt.length;i++)
                 buff.putInt(edge.dt[i]);
             pstmt.setBytes(7,buff.array());
             pstmt.addBatch();
@@ -158,8 +158,8 @@ public class EdgeDB extends Persistor {
 	                ByteBuffer buff = ByteBuffer.wrap(bytes);
 					while (buff.hasRemaining()) {
 						 int dt = buff.getInt();
-						 System.out.println(dt+":"+asofdt+":"+status);
-						 if (asofdt < dt) break; 
+						 //System.out.println(dt+":"+asofdt+":"+status);
+						 if (asofdt < dt) break;
 						 status = !status;
 					}
                     if (!status) continue;
@@ -192,7 +192,7 @@ public class EdgeDB extends Persistor {
 	                ByteBuffer buff = ByteBuffer.wrap(bytes);
 					while (buff.hasRemaining()) {
 						 int dt = buff.getInt();
-						 if (asofdt < dt) break; 
+						 if (asofdt < dt) break;
 						 status = !status;
 					}
                     if (!status) continue;
@@ -207,7 +207,7 @@ public class EdgeDB extends Persistor {
 		return out;
 	}
 
-	 
+
     private String readSql(int[] from, int[] to)
     {
         String filter = "";
@@ -335,8 +335,17 @@ public class EdgeDB extends Persistor {
             if (bytes == null) return;
             ByteBuffer buff = ByteBuffer.wrap(bytes);
 			dt = new int[bytes.length/4];
-			for (int i=0;i<dt.length;i++) 
+			for (int i=0;i<dt.length;i++)
 				dt[i] = buff.getInt();
+        }
+
+        public boolean validdt(int idt) {
+            boolean status = false;
+            for (int l:dt)
+                if (l < idt)
+                    break;
+                else status = !status;
+            return status;
         }
 
 		public String toString() {
@@ -345,7 +354,7 @@ public class EdgeDB extends Persistor {
 			for (int l:dt)  s+=",d="+l;
 			return s;
 		}
-		
+
         //pattern match function
         public boolean matchKey(int[] pattern) {
             for (int i=0;i<pattern.length;i++)
@@ -362,7 +371,7 @@ public class EdgeDB extends Persistor {
         {
 			temp.clear();
 			for (int d:dt)
-				if (d > 0) 
+				if (d > 0)
 					temp.put(d,temp.size()%2);
 			temp.put(ifrom,0);
 			temp.put(ito,1);
