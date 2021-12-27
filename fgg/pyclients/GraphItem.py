@@ -8,7 +8,7 @@ class GraphItem:
         GraphItem.graphitems.append(self)
 
     def id(self): return self.typeid
-    def name(self): return self.typename 
+    def name(self): return self.typename
 
     def __str__(self):
         return str(self.typeid) + ':' + self.typename
@@ -134,6 +134,13 @@ class Edge(GraphItem):
 
     def addNodeKey(self, node):
         self.nodes.append(node)
+
+    def __str__(self):
+        res = str(self.typeid) + ':' + self.typename + ":["
+        for n in self.nodes:
+            res += str(n) + ","
+        res += "]"
+        return res
 
 class NodeAttr(GraphItem):
     def __init__(self, typeid, name, ownerNodeobj, dtypeEnum, splitbyleg):
