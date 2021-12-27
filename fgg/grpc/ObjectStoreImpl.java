@@ -101,11 +101,11 @@ public class ObjectStoreImpl implements ObjectStore
         return client.setObjectAltKey(info, objid, keyseq, key);
     }
 
-    public ObjectCursor query(String objectName, String selects, String filter)
+    public ObjectCursor query(String objectName, String selects, String filter, int asofdt)
     {
         GraphItem.Node info = GraphItem.findNode(objectName);
         if (info == null) return null;
-        Map<Integer,Integer> map = client.getObjKeys(info, null, filter, new HashMap<Integer,Integer>());
+        Map<Integer,Integer> map = client.getObjKeys(info, null, filter, asofdt, new HashMap<Integer,Integer>());
         int[] result = new int[map.size()];
         int index = 0;
         for (int key:map.keySet())

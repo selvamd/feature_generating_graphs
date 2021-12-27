@@ -47,7 +47,8 @@ public interface IClientAPI
 
 	//This API supports elastic lookup on primary and secondary strkeys. Returns "objkey,altkeyseq".
 	//If matchkey = null, all of the main keys are returned as "objkey,1"
-	public Map<Integer,Integer> getObjKeys(GraphItem.Node node, String matchkey, String expr, Map<Integer,Integer> result);
+	public Map<Integer,Integer> getObjKeys(GraphItem.Node node, String matchkey,
+		String expr, int asofdt, Map<Integer,Integer> result);
 
 	//Convenience method using the above to provide lookup of objkey from the primary strkey
 	public int getObjPK(GraphItem.Node node, String strkey);

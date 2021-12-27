@@ -51,11 +51,11 @@ class FggStore:
         self.client.flush()
 
     #Runs a query on single object collection and returns a cursor to iterate all the objects
-    def query(self, objectName, selects, filter):
+    def query(self, objectName, selects, filter, asofdt):
         info = GraphItem.findNode(objectName)
         if info is None: return None;
         res = []
-        for key in self.client.getObjKeys(info.typeid, "", filter):
+        for key in self.client.getObjKeys(info.typeid, "", filter, asofdt):
             res.append(key)
         if selects is None:
             for attr in GraphItem.findNodeAttrs(info.typeid):

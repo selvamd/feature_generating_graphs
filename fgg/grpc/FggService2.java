@@ -153,8 +153,9 @@ public class FggService2 extends FggDataServiceGrpc.FggDataServiceImplBase
 		CBOType type = CBOType.valueOf(getParamInt(request, "nodekey"));
 		String matchkey = getParam(request, "match");
 		String expr = getParam(request, "expr");
+		int asofdt = getParamInt(request, "asofdt");
 
-		Map<Integer,Integer> objkeys = Cache2.getObjectKey(type, matchkey, expr, new HashMap<Integer,Integer>());
+		Map<Integer,Integer> objkeys = Cache2.getObjectKey(type, matchkey, expr, asofdt, new HashMap<Integer,Integer>());
 		if (matchkey == null || matchkey.length() == 0)
 			objkeys.forEach((k,v) -> bldr.addOutkey(k));
 		else

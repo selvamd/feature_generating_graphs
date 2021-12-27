@@ -23,21 +23,21 @@ if __name__ == '__main__':
     store.setObject("Customer", 100, "200100")
 
     #update attr
-    cur = store.query("Customer","cust_key,age","")
+    cur = store.query("Customer","cust_key,age","", 0)
     while cur.next():
         cur.set("age", 20150101, "100")
         cur.publish()
         break
 
     #setup relationship
-    actcur = store.query("Account","acct_key","")
+    actcur = store.query("Account","acct_key","", 0)
     custkey = store.getObjectPK("Customer","200100")
     while actcur.next():
         store.setLink(ac_cs_rel.id(),[custkey,actcur.getObjectPK()], 20150101,99991231)
         break
 
     #navigate relationships
-    cur = store.query("Customer","cust_key,age","($age > 53)")
+    cur = store.query("Customer","cust_key,age","($age > 53)", 20150101)
     while cur.next():
         act = cur.link("Account", 20160101)
         act.selectAttrs("acct_key,balance")

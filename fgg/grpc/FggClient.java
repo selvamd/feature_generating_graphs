@@ -127,7 +127,7 @@ public class FggClient implements IClientAPI
 
 	public int getObjPK(GraphItem.Node node, String pk)
     {
-        Map<Integer,Integer> keys = getObjKeys(node, pk, "", new HashMap<Integer,Integer>());
+        Map<Integer,Integer> keys = getObjKeys(node, pk, "", 0, new HashMap<Integer,Integer>());
         for (int key:keys.keySet())
             if (keys.get(key) == 1)
                 return key;
@@ -136,7 +136,8 @@ public class FggClient implements IClientAPI
 
 	//This API supports elastic lookup. Key will be "objkey,altkeyseq"
 	//Only main key is returned when no matchkey arg is provided
-	public Map<Integer,Integer> getObjKeys(GraphItem.Node node, String matchkey, String expr, Map<Integer,Integer> result)
+	public Map<Integer,Integer> getObjKeys(GraphItem.Node node, String matchkey, String expr,
+		int asofdt, Map<Integer,Integer> result)
 	{
         result.clear();
 		FggDataServiceOuterClass.FggMsg.Builder bldr = create(MsgType.GET_OBJ_KEYS);
@@ -144,10 +145,11 @@ public class FggClient implements IClientAPI
 		if (matchkey == null) matchkey = "";
 		bldr.addValues(addparam("match",""+matchkey));
 		bldr.addValues(addparam("expr",""+expr));
+		bldr.addValues(addparam("asofdt",""+asofdt));
 		FggDataServiceOuterClass.FggMsg msg = bstub.queryData(bldr.build());
 		//Map<Integer,Integer> result = new HashMap<Integer,Integer>();
 		if (msg.getValuesCount()==0) return result;
-        for (int i=3;i<msg.getValuesList().size();i++)
+        for (int i=4;i<msg.getValuesList().size();i++)
         {
             result.put(new Integer(msg.getValuesList().get(i).getName()),
                 new Integer(msg.getValuesList().get(i).getValue()));

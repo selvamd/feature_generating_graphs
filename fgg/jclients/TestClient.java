@@ -10,7 +10,7 @@ public class TestClient
 
     public static void custBalance(ObjectStore store) throws Exception
     {
-        ObjectCursor cust_cursor = store.query("Customer", "cust_key,age", "");
+        ObjectCursor cust_cursor = store.query("Customer", "cust_key,age", "", 0);
         if (cust_cursor == null) return;
 
         while (cust_cursor.next())
@@ -37,7 +37,7 @@ public class TestClient
     //This function iterates thru all the account objects and adds links to client objects
     public static void setupLinks(ObjectStore store) throws Exception
     {
-        ObjectCursor cursor = store.query("Account", "acct_key,balance", "");
+        ObjectCursor cursor = store.query("Account", "acct_key,balance", "", 0);
         if (cursor == null) return;
 
         GraphItem.Node[] nodes = new GraphItem.Node[] { GraphItem.findNode("Account"), GraphItem.findNode("Customer") };
@@ -70,7 +70,7 @@ public class TestClient
 
 
         //Create 1000 account objects
-        ObjectCursor cursor = store.query("Account", "acct_key,balance", "");
+        ObjectCursor cursor = store.query("Account", "acct_key,balance", "", 0);
         if (cursor == null) return;
 
         //use the cursor to get and set values
@@ -105,7 +105,7 @@ public class TestClient
 		System.out.println("\tTo   " + 200100);
 
         //Query back the all the created objects
-        ObjectCursor cursor = store.query("Customer", "cust_key,age", "");
+        ObjectCursor cursor = store.query("Customer", "cust_key,age", "", 0);
         if (cursor == null) return;
 
         //use the cursor to iterate thru the objects
@@ -138,7 +138,7 @@ public class TestClient
 			if (cmd.equals("cust_bal"))
 				custBalance(store);
 			if (cmd.equals("help"))
-				for (String s:"schema,new_custs,new_accts,acct_cust_rel,cust_bal".split(","))
+				for (String s:"schema,new_cust,new_acct,acct_cust_rel,cust_bal".split(","))
 				System.out.println(s);
 			if (cmd.equals("quit") || cmd.equals("exit"))
 				System.exit(-1);

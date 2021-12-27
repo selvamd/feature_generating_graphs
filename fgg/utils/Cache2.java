@@ -144,9 +144,9 @@ public class Cache2
 
     //Derives match->objkey[] for a given node (CBOType)
 	//variables on match expr string can be strkey, objkey or any attr prefixed with # for str and $ for num
-	public static Map<Integer,Integer> getObjectKey(CBOType type, String match, String strexpr, Map<Integer,Integer> out)
+	public static Map<Integer,Integer> getObjectKey(CBOType type, String match, String strexpr,
+			int asofdt, Map<Integer,Integer> out)
     {
-		System.out.println("match = "+match);
 		Map<String,Object> eval = new HashMap<String,Object>();
 		Map<Integer,Field> dbfld = new HashMap<Integer,Field>(); //Fld obj for singledb
 		Map<String,Map<Integer,Field>> cols = new HashMap<String,Map<Integer,Field>>();
@@ -181,12 +181,12 @@ public class Cache2
 				if (f.equals("strkey") || f.equals("objkey")) continue;
 				Field fld = cols.get(f).get(ent.getKey());
 				Object val = (fld == null)? null: fld.spoto();
+				if (asofdt > 0) val = fld.geto(asofdt);
 				if (val != null) eval.put(f, val);
 			}
 			if (!expr.filter(eval))
 				it.remove();
 		}
-		System.out.println("Found objkeys = " + out.size() );
         return out;
     }
 
