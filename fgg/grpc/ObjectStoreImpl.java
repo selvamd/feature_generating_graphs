@@ -105,7 +105,7 @@ public class ObjectStoreImpl implements ObjectStore
     {
         GraphItem.Node info = GraphItem.findNode(objectName);
         if (info == null) return null;
-        Map<Integer,Integer> map = client.getObjKeys(info, null, new HashMap<Integer,Integer>());
+        Map<Integer,Integer> map = client.getObjKeys(info, null, filter, new HashMap<Integer,Integer>());
         int[] result = new int[map.size()];
         int index = 0;
         for (int key:map.keySet())

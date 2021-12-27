@@ -55,7 +55,7 @@ class FggStore:
         info = GraphItem.findNode(objectName)
         if info is None: return None;
         res = []
-        for key in self.client.getObjKeys(info.typeid, filter):
+        for key in self.client.getObjKeys(info.typeid, "", filter):
             res.append(key)
         if selects is None:
             for attr in GraphItem.findNodeAttrs(info.typeid):

@@ -144,7 +144,7 @@ public class Cache2
 
     //Derives match->objkey[] for a given node (CBOType)
 	//variables on match expr string can be strkey, objkey or any attr prefixed with # for str and $ for num
-	public static Map<Integer,Integer> getObjectKey(CBOType type, String match, Map<Integer,Integer> out)
+	public static Map<Integer,Integer> getObjectKey(CBOType type, String match, String strexpr, Map<Integer,Integer> out)
     {
 		System.out.println("match = "+match);
 		Map<String,Object> eval = new HashMap<String,Object>();
@@ -152,10 +152,10 @@ public class Cache2
 		Map<String,Map<Integer,Field>> cols = new HashMap<String,Map<Integer,Field>>();
 
 		//get all keys
-		nodes.get(type).readAll(null,out);
+		nodes.get(type).readAll(match,out);
 
 		//parse expr and vars to eval
-		Expr expr = (match == null || match.trim().length() == 0)? null:Expr.getExpr(match);
+		Expr expr = (strexpr == null || strexpr.trim().length() == 0)? null:Expr.getExpr(strexpr);
 		if (expr == null) return out;
 
 		Set<String> s = expr.getVars(new HashSet<String>());
