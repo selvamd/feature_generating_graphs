@@ -18,6 +18,8 @@ class FggCursor:
         self.features = []
         self.attrs = []
         self.edgeattrs = []
+        self.batchsize = 1
+        self.batchread = 0
 
     def link(self, nodename, asof):
         info = GraphItem.findNode(nodename)
@@ -44,7 +46,10 @@ class FggCursor:
 
     def next(self):
         self.idx += 1
-        self.__fetch__()
+        self.batchread += 1
+        #print("test -> ",self.batchsize,self.batchread)
+        if self.batchsize == self.batchread:
+            self.__fetch__()
         return self.idx < len(self.result)
 
     def selectAttrs(self, attrs):
@@ -72,7 +77,7 @@ class FggCursor:
     def __fetch__(self):
         if self.idx < 0 or self.idx == len(self.result):
             return
-        id = self.result[self.idx]
+        id = self.result[self.idx:self.idx+1]
         if self.edge is not None and len(self.attrs) > 0:
             nidx = self.node.typeid
             eidx = self.edge.typeid
@@ -84,6 +89,10 @@ class FggCursor:
             nidx = self.node.typeid
             self.features = self.client.getObject(nidx, id, self.attrs)
             #print(nidx, id, len(self.attrs))
+        self.batchsize = len(self.features)/(len(self.edgeattrs)+len(self.attrs))
+        self.batchread = 0
+        #if self.idx % 10000 == 0:
+        #print(self.idx,self.batchsize, len(self.result))
 
     def __feat__(self, name):
         attrkey = 0
@@ -93,7 +102,9 @@ class FggCursor:
         for a in self.edgeattrs:
             if a.typename == name:
                 attrkey = a.typeid
-        for feat in self.features:
+        size = (len(self.edgeattrs)+len(self.attrs))
+        idx  = size * self.batchread
+        for feat in self.features[idx:idx+size]:
             if feat.attrkey == attrkey:
                 return feat
         return None
@@ -109,12 +120,19 @@ class FggCursor:
 
     def getScdDates(self):
         s = set()
-        for feat in self.features:
+        size = (len(self.edgeattrs)+len(self.attrs))
+        idx  = size * self.batchread
+        for feat in self.features[idx:idx+size]:
             feat.getScdDates(s)
         return s
 
     def publish(self):
-        self.client.publish(self.features)
+        size = (len(self.edgeattrs)+len(self.attrs))
+        idx  = size * self.batchread
+        #print("publishing called", self.idx, size)
+        #for f in self.features[idx:idx+size]:
+        #    print(f)
+        self.client.publish(self.features[idx:idx+size])
 
 if __name__ == '__main__':
     client = FggClient('localhost',33789)

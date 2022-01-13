@@ -370,9 +370,10 @@ public class EdgeDB extends Persistor {
         public void addTime(int ifrom, int ito, TreeMap<Integer,Integer> temp)
         {
 			temp.clear();
-			for (int d:dt)
-				if (d > 0)
-					temp.put(d,temp.size()%2);
+			if (dt != null)
+				for (int d:dt)
+					if (d > 0)
+						temp.put(d,temp.size()%2);
 			temp.put(ifrom,0);
 			temp.put(ito,1);
 			int last = 1;

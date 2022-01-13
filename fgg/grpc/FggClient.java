@@ -234,7 +234,7 @@ public class FggClient implements IClientAPI
 	{
         FggDataServiceOuterClass.FggMsg.Builder bldr = create(MsgType.GET_OBJECT);
 		bldr.addValues(addparam("typekey",""+node.ordinal()));
-		bldr.addValues(addparam("instkey",""+linkkey));
+		bldr.addValues(addparam("instkey0",""+linkkey));
 		bldr.addValues(addparam("edgekey",""+edge.ordinal()));
 		bldr.addValues(addparam("nodecnt",""+nodecnt));
         if (attrs == null)
@@ -254,7 +254,7 @@ public class FggClient implements IClientAPI
 	{
         FggDataServiceOuterClass.FggMsg.Builder bldr = create(MsgType.GET_OBJECT);
 		bldr.addValues(addparam("typekey",""+edge.ordinal()));
-		bldr.addValues(addparam("instkey",""+linkkey));
+		bldr.addValues(addparam("instkey0",""+linkkey));
         if (attrs == null)
         {
             List<GraphItem.EdgeAttr> attrkeys = GraphItem.findAttrs(edge, new ArrayList<GraphItem.EdgeAttr>());
@@ -272,7 +272,7 @@ public class FggClient implements IClientAPI
 	{
         FggDataServiceOuterClass.FggMsg.Builder bldr = create(MsgType.GET_OBJECT);
 		bldr.addValues(addparam("typekey",""+node.ordinal()));
-		bldr.addValues(addparam("instkey",""+objkey));
+		bldr.addValues(addparam("instkey0",""+objkey));
         if (attrs == null)
         {
             List<GraphItem.NodeAttr> attrkeys = GraphItem.findAttrs(node, new ArrayList<GraphItem.NodeAttr>());

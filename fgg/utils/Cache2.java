@@ -181,7 +181,7 @@ public class Cache2
 				if (f.equals("strkey") || f.equals("objkey")) continue;
 				Field fld = cols.get(f).get(ent.getKey());
 				Object val = (fld == null)? null: fld.spoto();
-				if (asofdt > 0) val = fld.geto(asofdt);
+				if (asofdt > 0 && fld != null) val = fld.geto(asofdt);
 				if (val != null) eval.put(f, val);
 			}
 			if (!expr.filter(eval))

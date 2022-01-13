@@ -19,7 +19,6 @@ public class FeatureData
 	private FggDataServiceOuterClass.FggData last;
 	private String error;
 
-    
 	public FeatureData()
 	{
 		date2value = new TreeMap<Integer,Object>();
@@ -76,10 +75,10 @@ public class FeatureData
         return o;
     }
 
-    public Set<Integer> scddates() { 
-        return date2value.keySet(); 
+    public Set<Integer> scddates() {
+        return date2value.keySet();
     }
-    
+
 	//returns object or link key
 	public int key()
 	{
@@ -90,8 +89,9 @@ public class FeatureData
 		if (res.size() == 1) return res.iterator().next();
 		return 0;
 	}
+
 	public int getAttrKey() { return attrkey; }
-	
+
 	public void copy2rec(Record rec, FieldMeta m) { copy2field(rec.field(m)); }
 	public void copy2field(Field f) {
 		try {
@@ -113,7 +113,7 @@ public class FeatureData
         if (date2value.isEmpty())
             date2value.put(Utils.mindate(), f.meta().getDefault());
     }
-    
+
 	public void copy(Record rec, FieldMeta m)
 	{
         reset(false);
@@ -125,7 +125,7 @@ public class FeatureData
                 date2value.put(dt, f.geto(dt));
         if (date2value.isEmpty())
             date2value.put(rec.mindate(), m.getDefault());
-        
+
         //copy((int)rec.recordid(),rec.field(m));
     }
 
@@ -140,7 +140,7 @@ public class FeatureData
 		res += "\nValue=" + date2value;
 		return res;
 	}
-    
+
 	//resets for reuse
 	public void reset(boolean preserveKeys)
 	{
@@ -152,7 +152,7 @@ public class FeatureData
 			keyseq[i] = 0;
 	}
 
-    
+
 	public List<FggDataServiceOuterClass.FggData> xmits()
 	{
 		List<FggDataServiceOuterClass.FggData> results = new ArrayList<FggDataServiceOuterClass.FggData>();
@@ -201,8 +201,8 @@ public class FeatureData
                 keyseq[i] = data.getIntValue();
                 return false;
             }
-        }         
-        
+        }
+
 		if (last != null)
 		{
 			int lastval = last.getIntValue();

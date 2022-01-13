@@ -1,12 +1,12 @@
 from enum_types import *
 from GraphItem import *
-from FggClient import *
 from FggCursor import *
 from FggStore import *
 
 if __name__ == '__main__':
 
     # Create graphstore client
+    asof = 20150101
     store = FggStore()
     store.printSchema()
 
@@ -15,35 +15,40 @@ if __name__ == '__main__':
     acct = GraphItem.findNode("Account")
     acctcustrel = GraphItem.findDefaultEdge([cust.id(),acct.id()])
 
-    #create attr
-    store.addAttr(cust.id(),"age", DataType.INT, FieldType.CORE, 4)
+    print("--- Creating 1 customer and 2 accounts ---")
+    store.setObject("Customer", 100, "200000")
+    store.setObject("Account", 101, "500000")
+    store.setObject("Account", 102, "500001")
 
-    #create obj
-    store.setObject("Customer", 100, "200100")
+    #create attr
+    print("--- Creating new features age and balance ---")
+    store.addAttr(cust.id(),"age", DataType.INT, FieldType.CORE, 4)
+    store.addAttr(acct.id(),"balance", DataType.INT, FieldType.CORE, 4)
 
     #update attr
+    print("--- Update age for customer ---")
     cur = store.query("Customer","cust_key,age")
     while cur.next():
-        cur.set("age", 20150101, "100")
+        cur.set("age", asof, 100)
         cur.publish()
-        break
 
-    #setup relationship
-    actcur = store.query("Account","acct_key")
-    custkey = store.getObjectPK("Customer","200100")
-    while actcur.next():
-        store.setLink(acctcustrel.id(),[custkey,actcur.getObjectPK()], 20150101,99991231)
-        break
+    #update attr
+    print("--- Update balance for accounts ---")
+    cur = store.query("Account","acct_key,balance")
+    while cur.next():
+        cur.set("balance", asof, 1000)
+        cur.publish()
+
+    print("--- linking objects cust to account ---")
+    store.setLink(acctcustrel.id(),[100,101], asof,99991231)
+    store.setLink(acctcustrel.id(),[100,102], asof,99991231)
 
     #navigate relationships
-    cur = store.query("Customer","cust_key,age","($age > 53)", 20150101)
+    print("---- Now lets query ------")
+    cur = store.query("Customer","cust_key,age","($age > 53)", asof)
     while cur.next():
-        act = cur.link("Account", 20160101)
+        print("Cust\t",cur.get("cust_key",asof),cur.get("age",asof))
+        act = cur.link("Account", asof)
         act.selectAttrs("acct_key,balance")
         while act.next():
-            bal = act.get("balance",20190101)
-            key = act.get("acct_key",20190101)
-            print("\t\t",key,bal)
-        key = cur.get("cust_key",20190101)
-        age = cur.get("age",20190101)
-        print(key,age)
+            print("\tAcct\t",act.get("acct_key",asof),act.get("balance",asof))

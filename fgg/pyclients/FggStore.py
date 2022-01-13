@@ -102,9 +102,9 @@ class FggStore:
         for node in GraphItem.findByType(Node):
             print(node.typename + "(" + str(node.typeid) + ")")
             for attr in GraphItem.findNodeAttrs(node.typeid):
-                print('\t',attr.typename, attr.dtype)
+                print('\t',attr.typename + "(" + str(attr.typeid) + ")", attr.dtype)
         print("--- RELATIONSHIPS ---");
         for node in GraphItem.findByType(Edge):
             print(node.typename + "(" + str(node.typeid) + ")")
             for attr in GraphItem.findEdgeAttrs(node.typeid):
-                print('\t',attr.typename, attr.dtype)
+                print('\t',attr.typename + "(" + str(attr.typeid) + ")", attr.dtype)

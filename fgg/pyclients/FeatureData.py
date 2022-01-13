@@ -39,7 +39,7 @@ class FeatureData:
         for key in sorted(self.date2value):
             if dt >= key and self.date2value[key] == val:
                 return
-        self.date2value[dt] == val
+        self.date2value[dt] = val
 
     def reset(self, bPreserveKeys):
         self.attrkey = 0

@@ -156,12 +156,13 @@ class FggClient:
         self.getNodeAttrInfo(it.outkey[0])
         return True
 
-    def getLink(self, edgekey, linkkey, attrs):
+    def getLink(self, edgekey, linkkeys, attrs):
         res = []
         msg = FggDataService_pb2.FggMsg()
         msg.request = MsgType.GET_OBJECT
         FggClient.AddParam(msg, 'typekey', str(edgekey))
-        FggClient.AddParam(msg, 'instkey', str(linkkey))
+        for idx in range(len(linkkeys)):
+            FggClient.AddParam(msg, 'instkey' + str(idx), linkkeys[idx])
         for i in range(len(attrs)):
             FggClient.AddParam(msg, 'attrkey'+ str(i), str(attrs[i].typeid))
         it = self.stub.requestData(msg)
@@ -172,12 +173,13 @@ class FggClient:
                 v = FeatureData(None)
         return res
 
-    def getObject2(self, edgekey, linkkey, nodekey, nodecnt, attrs):
+    def getObject2(self, edgekey, linkkeys, nodekey, nodecnt, attrs):
         res = []
         msg = FggDataService_pb2.FggMsg()
         msg.request = MsgType.GET_OBJECT
         FggClient.AddParam(msg, 'typekey', str(nodekey))
-        FggClient.AddParam(msg, 'instkey', str(linkkey))
+        for idx in range(len(linkkeys)):
+            FggClient.AddParam(msg, 'instkey' + str(idx), linkkeys[idx])
         FggClient.AddParam(msg, 'edgekey', str(edgekey))
         FggClient.AddParam(msg, 'nodecnt', str(nodecnt))
         for i in range(len(attrs)):
@@ -190,12 +192,13 @@ class FggClient:
                 v = FeatureData(None)
         return res
 
-    def getObject(self, nodekey, objkey, attrs):
+    def getObject(self, nodekey, objkeys, attrs):
         res = []
         msg = FggDataService_pb2.FggMsg()
         msg.request = MsgType.GET_OBJECT
         FggClient.AddParam(msg, 'typekey', nodekey)
-        FggClient.AddParam(msg, 'instkey', objkey)
+        for idx in range(len(objkeys)):
+            FggClient.AddParam(msg, 'instkey' + str(idx), objkeys[idx])
         for i in range(len(attrs)):
             FggClient.AddParam(msg, 'attrkey'+ str(i), str(attrs[i].typeid))
         it = self.stub.requestData(msg)
@@ -239,6 +242,7 @@ class FggClient:
         for v in it.values:
             if v.name == 'UPDATED':
                 return v.value
+
 
     def getDates(self):
         msg = FggDataService_pb2.FggMsg()

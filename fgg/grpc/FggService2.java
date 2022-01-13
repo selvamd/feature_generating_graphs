@@ -146,23 +146,6 @@ public class FggService2 extends FggDataServiceGrpc.FggDataServiceImplBase
 		return bldr.build();
 	}
 
-	//Get by mathing key or get all keys
-	private FggDataServiceOuterClass.FggMsg onGetObjKeys(FggDataServiceOuterClass.FggMsg request)
-	{
-		FggDataServiceOuterClass.FggMsg.Builder bldr = create(request);
-		CBOType type = CBOType.valueOf(getParamInt(request, "nodekey"));
-		String matchkey = getParam(request, "match");
-		String expr = getParam(request, "expr");
-		int asofdt = getParamInt(request, "asofdt");
-
-		Map<Integer,Integer> objkeys = Cache2.getObjectKey(type, matchkey, expr, asofdt, new HashMap<Integer,Integer>());
-		if (matchkey == null || matchkey.length() == 0)
-			objkeys.forEach((k,v) -> bldr.addOutkey(k));
-		else
-			objkeys.forEach((k,v) -> bldr.addValues(addparam(k+"",v+"")));
-
-		return bldr.build();
-	}
 
 	private FggDataServiceOuterClass.FggMsg onSetObjKey(FggDataServiceOuterClass.FggMsg request)
 	{
@@ -176,7 +159,6 @@ public class FggService2 extends FggDataServiceGrpc.FggDataServiceImplBase
 			bldr.addOutkey(Cache2.setObjectKey(type, objkey, altkeynum, getParam(request, "str_key")));
 		return bldr.build();
 	}
-
 
 	private FggDataServiceOuterClass.FggMsg onSetLinkKey(FggDataServiceOuterClass.FggMsg request)
 	{
@@ -196,24 +178,6 @@ public class FggService2 extends FggDataServiceGrpc.FggDataServiceImplBase
 				bldr.addValues(addparam("STATUS","Invalid objkey"));
 			else
 				bldr.addOutkey(linkkey);
-		}
-		return bldr.build();
-	}
-
-	private FggDataServiceOuterClass.FggMsg onGetLinkKeys(FggDataServiceOuterClass.FggMsg request)
-	{
-		FggDataServiceOuterClass.FggMsg.Builder bldr = create(request);
-		LinkType type 	= LinkType.valueOf(getParamInt(request, "edgekey"));
-		int asofdt = getParamInt(request, "asofdt");
-        boolean includeObj = getParam(request, "includeobj").equalsIgnoreCase("TRUE");
-		if (type == null) {
-			bldr.addValues(addparam("STATUS","Invalid edgekey"));
-		} else {
-			int[] objkeys = new int[type.maxnodes()];
-			for (int i=0;i<objkeys.length;i++)
-				objkeys[i] = getParamInt(request, "objkey"+i);
-			Set<Integer> links = Cache2.getLinks(type, objkeys, asofdt, includeObj, new HashSet<Integer>());
-			links.forEach((k) -> bldr.addOutkey(k));
 		}
 		return bldr.build();
 	}
@@ -304,6 +268,41 @@ public class FggService2 extends FggDataServiceGrpc.FggDataServiceImplBase
 		return bldr.build();
 	}
 
+	//Get by mathing key or get all keys
+	private FggDataServiceOuterClass.FggMsg onGetObjKeys(FggDataServiceOuterClass.FggMsg request)
+	{
+		FggDataServiceOuterClass.FggMsg.Builder bldr = create(request);
+		CBOType type = CBOType.valueOf(getParamInt(request, "nodekey"));
+		String matchkey = getParam(request, "match");
+		String expr = getParam(request, "expr");
+		int asofdt = getParamInt(request, "asofdt");
+
+		Map<Integer,Integer> objkeys = Cache2.getObjectKey(type, matchkey, expr, asofdt, new HashMap<Integer,Integer>());
+		if (matchkey == null || matchkey.length() == 0)
+			objkeys.forEach((k,v) -> bldr.addOutkey(k));
+		else
+			objkeys.forEach((k,v) -> bldr.addValues(addparam(k+"",v+"")));
+
+		return bldr.build();
+	}
+
+	private FggDataServiceOuterClass.FggMsg onGetLinkKeys(FggDataServiceOuterClass.FggMsg request)
+	{
+		FggDataServiceOuterClass.FggMsg.Builder bldr = create(request);
+		LinkType type 	= LinkType.valueOf(getParamInt(request, "edgekey"));
+		int asofdt = getParamInt(request, "asofdt");
+        boolean includeObj = getParam(request, "includeobj").equalsIgnoreCase("TRUE");
+		if (type == null) {
+			bldr.addValues(addparam("STATUS","Invalid edgekey"));
+		} else {
+			int[] objkeys = new int[type.maxnodes()];
+			for (int i=0;i<objkeys.length;i++)
+				objkeys[i] = getParamInt(request, "objkey"+i);
+			Set<Integer> links = Cache2.getLinks(type, objkeys, asofdt, includeObj, new HashSet<Integer>());
+			links.forEach((k) -> bldr.addOutkey(k));
+		}
+		return bldr.build();
+	}
 
 	@Override
     //Type=[node|edge|nodefromedge]
@@ -312,62 +311,70 @@ public class FggService2 extends FggDataServiceGrpc.FggDataServiceImplBase
 	public void requestData(FggDataServiceOuterClass.FggMsg request,
 		StreamObserver<FggDataServiceOuterClass.FggData> responseObserver)
 	{
-        //GET_OBJECT
-        //System.out.println(request);
-		int instkey = getParamInt(request, "instkey");
+		//typekey always denotes node/edge that contains the target attr
         int typekey = getParamInt(request, "typekey");
+		
+		//Inputs to derive objid of requested attr from input linkid
+        int nodecnt = getParamInt(request, "nodecnt");
+        int edgekey = getParamInt(request, "edgekey");
 
 		CBOType  ctype  = CBOType.valueOf(typekey);
-        LinkType ltype 	= (ctype == null)? LinkType.valueOf(typekey):
-                        LinkType.valueOf(getParamInt(request, "edgekey"));
+        LinkType ltype 	= (nodecnt == -1)? 
+						LinkType.valueOf(typekey):
+                        LinkType.valueOf(edgekey);
+						
+		//System.out.println(request);
         //System.out.println(ltype + ":" + ctype +":"+ instkey );
-
-        Map<Integer,Field> res = new HashMap<Integer,Field>();
-        if (ltype != null && ctype != null) {
-            int nodecnt = getParamInt(request, "nodecnt");
-            instkey = Cache2.getObjectKey(ltype,ctype,nodecnt,instkey);
-            res = Cache2.getObjectData(ctype, instkey, res);
-        } else if (ctype != null) {
-            res = Cache2.getObjectData(ctype, instkey, res);
-        } else if (ltype != null) {
-            res = Cache2.getLinkData(ltype, instkey, res);
-        }
 
 		// Use a builder to construct a new Proto buffer object
 		CallStreamObserver<FggDataServiceOuterClass.FggData> cso =
 			(CallStreamObserver<FggDataServiceOuterClass.FggData>)responseObserver;
 
-        if (res.size() == 0)
-        {
-            responseObserver.onCompleted();
-            return;
-        }
+        Map<Integer,Field> res = new HashMap<Integer,Field>();
+		
+		//instkey has objid/linkid to start navigation from
+		for (int k=0;k<10000;k++) 
+		{
+			int instkey = getParamInt(request, "instkey"+k);
+			if (instkey == -1) break;
+	        if (nodecnt >= 0) {
+	            instkey = Cache2.getObjectKey(ltype,ctype,nodecnt,instkey);
+	            res = Cache2.getObjectData(ctype, instkey, res);
+	        } else if (ctype != null) {
+	            res = Cache2.getObjectData(ctype, instkey, res);
+	        } else if (ltype != null) {
+	            res = Cache2.getLinkData(ltype, instkey, res);
+	        }
 
-        //System.out.println(res.values());
-        for (int i=0;i<1000;i++)
-        {
-            int attr = getParamInt(request, "attrkey"+ i);
-            if (attr < 0) break;
-            FeatureData data = new FeatureData();
-            if (!res.containsKey(attr)) {
-                FieldMeta m = FieldMeta.lookup(attr);
-                Field f = new Field(m);
-                f.seto(Utils.mindate(),m.getDefault());
-                data.copy(instkey, f);
-            }
-            else {
-                data.copy(instkey, res.get(attr));
-                Logger.log(Logger.GET_NODE_DATA,
-                    "getObjectData ["+instkey+","+attr+"]=" + res.get(attr));
-            }
-			for (FggDataServiceOuterClass.FggData d:data.xmits())
-			{
-				//Sleep for slow client
-				while (!cso.isReady())
-					try { Thread.sleep(100); } catch (Exception e) { }
-				cso.onNext(d);
-			}
-        }
+	        if (res.size() > 0) 
+	        {
+		        //System.out.println(res.values());
+		        for (int i=0;i<1000;i++)
+		        {
+		            int attr = getParamInt(request, "attrkey"+ i);
+		            if (attr < 0) break;
+		            FeatureData data = new FeatureData();
+		            if (!res.containsKey(attr)) {
+		                FieldMeta m = FieldMeta.lookup(attr);
+		                Field f = new Field(m);
+		                f.seto(Utils.mindate(),m.getDefault());
+		                data.copy(instkey, f);
+		            }
+		            else {
+		                data.copy(instkey, res.get(attr));
+		                Logger.log(Logger.GET_NODE_DATA,
+		                    "getObjectData ["+instkey+","+attr+"]=" + res.get(attr));
+		            }
+					for (FggDataServiceOuterClass.FggData d:data.xmits())
+					{
+						//Sleep for slow client
+						while (!cso.isReady())
+							try { Thread.sleep(100); } catch (Exception e) { }
+						cso.onNext(d);
+					}
+		        }
+	        }
+		}
 		// When you are done, you must call onCompleted.
 		responseObserver.onCompleted();
 	}
