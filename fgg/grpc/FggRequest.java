@@ -12,11 +12,12 @@ import fgg.access.*;
 public class FggRequest
 {
 	private static int REQUESTID = 100;
-	public final int request;
-	public final CBOType cbo;
-	public final LinkType link;
+	public final int   request;
+	//public final CBOType   cbo;
+	//public final LinkType link;
+	//public final String   expr;
 
-	public FggRequest() {
+	public FggRequest(CBOType type) {
 		request = REQUESTID++;
 	}
 	//nodeattr + edgeattr
