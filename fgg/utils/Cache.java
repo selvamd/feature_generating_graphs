@@ -50,7 +50,7 @@ public class Cache
 			//type.index().buildIndex();
 			//type.recorder = FileRecorder.make(type.name(), list, null, type.index());
             //type.recorder = MongoRecorder.make(type, list);
-		}           
+		}
 	}
 
 	private static void buildDates() throws Exception
@@ -84,11 +84,11 @@ public class Cache
 
 	public static int setObjectKey(CBOType type, int altkeynum, int objkey, String str_key)
 	{
-        if (objkey > 0) 
+        if (objkey > 0)
             type.recorder.storeKey(objkey, altkeynum, str_key);
 		return objkey;
 	}
-    
+
     /*
 	//Create new if objkey is 0
 	public static int setObjectKey(CBOType type, int altkeynum, int objkey, String str_key)
@@ -107,7 +107,7 @@ public class Cache
 		return objkey;
 	}
      */
-     
+
 	public static Map<Integer,Integer> getObjectKey(CBOType type, String match, Map<Integer,Integer> result)
 	{
 		return type.recorder.findKey(match, result);

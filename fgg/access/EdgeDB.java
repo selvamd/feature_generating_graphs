@@ -71,7 +71,7 @@ public class EdgeDB extends Persistor {
 
     //Returns matching linkkeys given partial or full component objkeys
     //If includeObj=TRUE, returns component objkeys are included in the result
-	public synchronized Set<Integer> read(int[] keys, int asofdt, boolean includeObj, Set<Integer> out)
+	public synchronized List<Integer> read(int[] keys, int asofdt, boolean includeObj, List<Integer> out)
     {
 		out.clear();
         read(keys, keys, asofdt, includeObj, out);
@@ -144,7 +144,7 @@ public class EdgeDB extends Persistor {
 	//Make "from" or "to" negative to indicate exclusiveness at the boundaries
 	//Make "from" or "to" 0 to indicate open boundary or skip checking
 	//For exact match, make from and to be the same positive value
-	private Set<Integer> read(int[] from, int[] to, int asofdt, boolean includeObj, Set<Integer> out)
+	private List<Integer> read(int[] from, int[] to, int asofdt, boolean includeObj, List<Integer> out)
 	{
         String sql = readSql(from,to);
 		try {
@@ -168,7 +168,6 @@ public class EdgeDB extends Persistor {
                 if (includeObj)
                     for (int i=0;i<type.maxnodes();i++)
                         out.add(rs.getInt("k"+i));
-
             }
             rs.close();
             stmt.close();

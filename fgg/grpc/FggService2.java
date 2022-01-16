@@ -298,7 +298,7 @@ public class FggService2 extends FggDataServiceGrpc.FggDataServiceImplBase
 			int[] objkeys = new int[type.maxnodes()];
 			for (int i=0;i<objkeys.length;i++)
 				objkeys[i] = getParamInt(request, "objkey"+i);
-			Set<Integer> links = Cache2.getLinks(type, objkeys, asofdt, includeObj, new HashSet<Integer>());
+			List<Integer> links = Cache2.getLinks(type, objkeys, asofdt, includeObj, new LinkedList<Integer>());
 			links.forEach((k) -> bldr.addOutkey(k));
 		}
 		return bldr.build();
@@ -313,16 +313,16 @@ public class FggService2 extends FggDataServiceGrpc.FggDataServiceImplBase
 	{
 		//typekey always denotes node/edge that contains the target attr
         int typekey = getParamInt(request, "typekey");
-		
+
 		//Inputs to derive objid of requested attr from input linkid
         int nodecnt = getParamInt(request, "nodecnt");
         int edgekey = getParamInt(request, "edgekey");
 
 		CBOType  ctype  = CBOType.valueOf(typekey);
-        LinkType ltype 	= (nodecnt == -1)? 
+        LinkType ltype 	= (nodecnt == -1)?
 						LinkType.valueOf(typekey):
                         LinkType.valueOf(edgekey);
-						
+
 		//System.out.println(request);
         //System.out.println(ltype + ":" + ctype +":"+ instkey );
 
@@ -331,9 +331,9 @@ public class FggService2 extends FggDataServiceGrpc.FggDataServiceImplBase
 			(CallStreamObserver<FggDataServiceOuterClass.FggData>)responseObserver;
 
         Map<Integer,Field> res = new HashMap<Integer,Field>();
-		
+
 		//instkey has objid/linkid to start navigation from
-		for (int k=0;k<10000;k++) 
+		for (int k=0;k<10000;k++)
 		{
 			int instkey = getParamInt(request, "instkey"+k);
 			if (instkey == -1) break;
@@ -346,7 +346,7 @@ public class FggService2 extends FggDataServiceGrpc.FggDataServiceImplBase
 	            res = Cache2.getLinkData(ltype, instkey, res);
 	        }
 
-	        if (res.size() > 0) 
+	        if (res.size() > 0)
 	        {
 		        //System.out.println(res.values());
 		        for (int i=0;i<1000;i++)

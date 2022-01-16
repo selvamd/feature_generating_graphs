@@ -8,10 +8,18 @@ import fgg.utils.*;
 import fgg.access.*;
 
 //Will encapsulate all request
-//request based state 
+//request based state
 public class FggRequest
 {
-	//Objects asof
-	//Links asof
-	//
+	private static int REQUESTID = 100;
+	public final int request;
+	public final CBOType cbo;
+	public final LinkType link;
+
+	public FggRequest() {
+		request = REQUESTID++;
+	}
+	//nodeattr + edgeattr
+	//getLinks(linktype, objkeys, asofdt, bIncludeObj) -> []
+	//getObjectKey(cbotype, strkey, strexpr, expr_evaldt) -> []
 }

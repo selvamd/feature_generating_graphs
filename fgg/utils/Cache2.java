@@ -137,22 +137,24 @@ public class Cache2
         return objkey;
 	}
 
+	//return strkey1 of the object
 	public static String getObjectKey(CBOType type, int key)
     {
         return nodes.get(type).read(key,1);
     }
 
-    //Derives match->objkey[] for a given node (CBOType)
-	//variables on match expr string can be strkey, objkey or any attr prefixed with # for str and $ for num
-	public static Map<Integer,Integer> getObjectKey(CBOType type, String match, String strexpr,
+    //Derives match->objkey for a given node (CBOType)
+	//asofdt is strictly required to evaluate variables in strexpr
+	public static Map<Integer,Integer> getObjectKey(CBOType type,
+			String strkey, String strexpr,
 			int asofdt, Map<Integer,Integer> out)
     {
-		Map<String,Object> eval = new HashMap<String,Object>();
+		Map<String,Object>  eval = new HashMap<String,Object>();
 		Map<Integer,Field> dbfld = new HashMap<Integer,Field>(); //Fld obj for singledb
 		Map<String,Map<Integer,Field>> cols = new HashMap<String,Map<Integer,Field>>();
 
 		//get all keys
-		nodes.get(type).readAll(match,out);
+		nodes.get(type).readAll(strkey,out);
 
 		//parse expr and vars to eval
 		Expr expr = (strexpr == null || strexpr.trim().length() == 0)? null:Expr.getExpr(strexpr);
@@ -203,7 +205,8 @@ public class Cache2
     }
 
     //All matching links given partial obj keys
-	public static Set<Integer> getLinks(LinkType type, int[] objkeys, int asofdt, boolean includeObj, Set<Integer> out)
+	public static List<Integer> getLinks(LinkType type, int[] objkeys,
+		int asofdt, boolean includeObj, List<Integer> out)
     {
         return edges.get(type).read(objkeys, asofdt, includeObj, out);
     }

@@ -16,6 +16,7 @@ import fgg.access.*;
 import fgg.data.*;
 import fgg.utils.*;
 
+//each object has unique objkey (int) and many strkeys 1..n
 public class NodeKeyDB extends Persistor
 {
     private Connection conn;
@@ -52,17 +53,20 @@ public class NodeKeyDB extends Persistor
         return (nk == null)? null:nk.str;
     }
 
-	public synchronized Map<Integer,Integer> readAll(String match, Map<Integer,Integer> out) {
+	public synchronized Map<Integer,Integer> readAll(String strkey,
+        Map<Integer,Integer> out) 
+    {
         out.clear();
-        if (nodekeys.containsKey(match))
-            out.put(nodekeys.get(match).pk, nodekeys.get(match).alt);
-        else if (match == null || match.length() == 0)
+        if (nodekeys.containsKey(strkey))
+            out.put(nodekeys.get(strkey).pk, nodekeys.get(strkey).alt);
+        else if (strkey == null || strkey.length() == 0)
             nodekeys.forEach((k,v)->out.put(v.pk,v.alt));
-        findAll(match,out);
+        findAll(strkey,out);
         return out;
     }
 
-	public synchronized int read(String key) {
+	public synchronized int read(String key)
+    {
         NodeKey nk = nodekeys.get(key);
         if (nk == null) nk = findByPk(key);
         return (nk == null)? -1:nk.pk;
