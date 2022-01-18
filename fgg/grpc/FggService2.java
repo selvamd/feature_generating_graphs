@@ -6,6 +6,7 @@ import java.util.*;
 import fgg.data.*;
 import fgg.utils.*;
 import fgg.access.*;
+import java.util.concurrent.*;
 
 public class FggService2 extends FggDataServiceGrpc.FggDataServiceImplBase
 {
@@ -41,6 +42,7 @@ public class FggService2 extends FggDataServiceGrpc.FggDataServiceImplBase
 		responseObserver.onNext(request);
 		responseObserver.onCompleted();
     }
+
 
 	private FggDataServiceOuterClass.FggMsg onLogin(FggDataServiceOuterClass.FggMsg request) {
 		String user = getParam(request,"user");
@@ -269,6 +271,7 @@ public class FggService2 extends FggDataServiceGrpc.FggDataServiceImplBase
 	}
 
 	//Get by mathing key or get all keys
+
 	private FggDataServiceOuterClass.FggMsg onGetObjKeys(FggDataServiceOuterClass.FggMsg request)
 	{
 		FggDataServiceOuterClass.FggMsg.Builder bldr = create(request);
@@ -283,6 +286,55 @@ public class FggService2 extends FggDataServiceGrpc.FggDataServiceImplBase
 		else
 			objkeys.forEach((k,v) -> bldr.addValues(addparam(k+"",v+"")));
 
+		return bldr.build();
+	}
+
+	// Only returns requestid and size due to server side caching
+	static Map<Integer,FggRequest> requests = new ConcurrentHashMap<Integer,FggRequest>();
+	private FggDataServiceOuterClass.FggMsg onGetObjKeysV2(FggDataServiceOuterClass.FggMsg request)
+	{
+		FggDataServiceOuterClass.FggMsg.Builder bldr = create(request);
+		CBOType type = CBOType.valueOf(getParamInt(request, "nodekey"));
+		String expr = getParam(request, "expr");
+		int asofdt = getParamInt(request, "asofdt");
+
+		Map<Integer,Integer> objkeys = Cache2.getObjectKey(type, "", expr, asofdt, new HashMap<Integer,Integer>());
+
+		if (objkeys.size() == 0 || getParamInt(request, "attr0") <= 0) {
+			bldr.addOutkey(0); //requestid = 0
+			bldr.addOutkey(0); //size = 0
+		} else {
+			FggRequest req = new FggRequest(type, null, expr, asofdt, objkeys.keySet());
+			requests.put(req.request, req);
+			for (int i=0;i<1000;i++) {
+				int attr = getParamInt(request, "attr"+i);
+				if (attr > 0) req.addAttr(attr);
+				else break;
+			}
+			bldr.addOutkey(req.request);
+			bldr.addOutkey(objkeys.size());
+		}
+		return bldr.build();
+	}
+
+	//Provide requestid,edge,nodecnt,asofdt and attrlist
+	//returns edgerequestid
+	private FggDataServiceOuterClass.FggMsg onGetLinkKeysV2(FggDataServiceOuterClass.FggMsg request)
+	{
+		FggDataServiceOuterClass.FggMsg.Builder bldr = create(request);
+
+		LinkType type 	= LinkType.valueOf(getParamInt(request, "edgekey"));
+		int asofdt = getParamInt(request, "asofdt");
+		int nodecnt = getParamInt(request,"nodecnt");
+		int requestid = getParamInt(request,"requestid");
+
+		if (requests.get(requestid) == null || getParamInt(request, "attr0") <= 0) {
+			bldr.addOutkey(0); //requestid = 0
+		} else {
+			FggRequest req = requests.get(requestid);
+			FggRequest.EdgeQry qry = req.createEdgeQry(type,nodecnt,asofdt);
+			bldr.addOutkey(qry.request);
+		}
 		return bldr.build();
 	}
 
@@ -302,6 +354,33 @@ public class FggService2 extends FggDataServiceGrpc.FggDataServiceImplBase
 			links.forEach((k) -> bldr.addOutkey(k));
 		}
 		return bldr.build();
+	}
+
+	//For objects needs requestid,pageno,pagesize
+	//For links needs requestid,edgerequestid,pageno,pagesize
+	public void processAttrRequest(FggDataServiceOuterClass.FggMsg request,
+		StreamObserver<FggDataServiceOuterClass.FggData> responseObserver)
+	{
+		//typekey always denotes node/edge that contains the target attr
+        int reqid  = getParamInt(request, "requestid");
+		int page = getParamInt(request, "pageno");
+		int size = getParamInt(request, "pagesize");
+
+		CallStreamObserver<FggDataServiceOuterClass.FggData> cso =
+			(CallStreamObserver<FggDataServiceOuterClass.FggData>)responseObserver;
+
+		FggRequest req = requests.get(reqid);
+		List<FeatureData> data = new ArrayList<FeatureData>();
+		for (int i=0;i < size;i++)
+			for (FeatureData fd:req.feature(page,size,i,data))
+				for (FggDataServiceOuterClass.FggData d:fd.xmits()) {
+					while (!cso.isReady())
+						try { Thread.sleep(100); } catch (Exception e) { }
+					cso.onNext(d);
+				}
+		responseObserver.onCompleted();
+		if (req.bLastPage(page,size))
+			requests.remove(reqid);
 	}
 
 	@Override
