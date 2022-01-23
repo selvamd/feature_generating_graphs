@@ -103,24 +103,36 @@ public class FggSetupMetaData
         NodeList list = root.getElementsByTagName("link");
         for (int i = 0; i < list.getLength();i++)
         {
+			Map<String,String> legs = new LinkedHashMap<String,String>();
             Element ele = (Element)list.item(i);
             String name = ele.getAttribute("name");
             if (name.trim().length() == 0) name = null;
             String[] objects = ele.getAttribute("objects").split(",");
-            lookupOrCreateEdge(toggle(objects[0]), toggle(objects[1]), name);
+			for (String obj:objects) {
+				String[] leg = obj.split("\\.");
+				legs.put(leg[0],toggle(leg[1]));
+			}
+            lookupOrCreateEdge(legs, name);
         }
 	}
 
-	public static int lookupOrCreateEdge(String parentcbo, String childcbo, String edge)
+	//legs maps legname to legnodename
+	public static int lookupOrCreateEdge(Map<String,String> legs, String edge)
 	{
-		CBOType p = CBOType.valueOf(parentcbo);
-		CBOType c = CBOType.valueOf(childcbo);
-		if (p == null || c == null) return -1;
-        boolean isDefault = (edge == null);
-		if (edge == null) edge = p.ordinal()+"_"+c.ordinal();
+		int idx = 0;
+		if (edge == null) return -1; //Lets make everything named for designing a dsl
 		LinkType type = LinkType.valueOf(edge);
 		if (type != null) return type.ordinal();
-		CBO cbo = CBOBuilder.createEdge(edge, isDefault, new int[] { p.ordinal(), c.ordinal() }, new int[] { 20, 11 });
+
+		int[] nodes = new int[legs.size()];
+		String[] names = new String[legs.size()];
+		for (String leg: legs.keySet()) {
+			CBOType c = CBOType.valueOf(legs.get(leg));
+			if (c == null) return -1;
+			nodes[idx] = c.ordinal();
+			names[idx++] = leg;
+		}
+		CBO cbo = CBOBuilder.createEdge(edge, false, nodes, names, new int[] { 20, 11 });
 		edges.add(cbo);
 		return cbo.recid();
 	}

@@ -21,6 +21,7 @@ class FggCursor:
         self.batchsize = 1
         self.batchread = 0
 
+    '''
     def link(self, nodename, asof):
         info = GraphItem.findNode(nodename)
         if info is None: return None
@@ -30,15 +31,15 @@ class FggCursor:
         fks = self.client.getLinkKeys(edge.typeid, objid, asof)
         cnt = 1 if info.typeid == self.node.typeid else 0
         return FggCursor(self.client, info, fks, edge, cnt)
+    '''
 
-    def linkByName(linkname, asof):
+    def linkByName(self, linkname:str, asof:int = 0):
         edge = GraphItem.findEdge(linkname)
         if edge is None: return None
-        info = edge.node((edge.index(node)+1)%2)
-        objid = [0,0]
-        objid[edge.index(node)] = self.result[self.idx]
+        objid = [self.result[self.idx],0] if edge.index(self.node) == 0 else [0,self.result[self.idx]]
         fks = self.client.getLinkKeys(edge.typeid, objid, asof)
-        cnt = 1 if info.typeid == node.typeid else 0
+        info = GraphItem.findByPK(edge.node((edge.index(self.node)+1)%2))
+        cnt = 1 if info.typeid == self.node.typeid else 0
         return FggCursor(self.client, info, fks, edge, cnt)
 
     def keys(self):
@@ -52,7 +53,7 @@ class FggCursor:
             self.__fetch__()
         return self.idx < len(self.result)
 
-    def selectAttrs(self, attrs):
+    def selectAttrs(self, attrs:str):
         for attr in attrs.split(","):
             atg = GraphItem.findNodeAttr(self.node.typeid,attr)
             if atg is None: return False
@@ -60,7 +61,7 @@ class FggCursor:
         self.__fetch__()
         return True
 
-    def selectLinkAttrs(self, attrs):
+    def selectLinkAttrs(self, attrs:str):
         for attr in attrs.split(","):
             atg = GraphItem.findEdgeAttr(attr)
             if atg is None: return False
@@ -109,11 +110,11 @@ class FggCursor:
                 return feat
         return None
 
-    def get(self, attr, asof):
+    def get(self, attr:str, asof:int):
         feat = self.__feat__(attr)
         return None if feat is None else feat.getValue(asof)
 
-    def set(self, attr, asof, val):
+    def set(self, attr:str, asof:int, val):
         feat = self.__feat__(attr)
         if feat is not None:
             feat.setValue(asof,val)

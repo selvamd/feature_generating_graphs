@@ -206,7 +206,7 @@ public class CBOBuilder extends CBOPersistor
 			return cbo;
 		}
 
-		public static CBO createEdge(String name, boolean isDefault, int[] nodekeys, int[] limits)
+		public static CBO createEdge(String name, boolean isDefault, int[] nodekeys, String[] names, int[] limits)
 		{
 			int id = ++type_key;
 			CBOMeta[] meta = meta_list[Table.EDGE.ordinal()];
@@ -221,6 +221,8 @@ public class CBOBuilder extends CBOPersistor
 			cbo.set(meta[6], size);
 			for (int i=0;i<size;i++)
 				cbo.set("node_key"+i, ""+nodekeys[i]);
+			for (int i=0;i<size;i++)
+				cbo.set("node_name"+i, ""+names[i]);
 			for (int i=0;i<size;i++)
 				cbo.set("node_limits"+i, ""+ limits[i]);
 			return cbo;
@@ -295,9 +297,9 @@ public class CBOBuilder extends CBOPersistor
 		}
 
 		public static CBO createGitHistory() 	{ return null; }
-        
-		public static CBO createAttrFillState(int attr, int dt) 
-        { 
+
+		public static CBO createAttrFillState(int attr, int dt)
+        {
 			int id = ++fillrec;
 			CBOMeta[] meta = meta_list[Table.ATTR_FILL_STATE.ordinal()];
 			CBO cbo = new CBO(meta);

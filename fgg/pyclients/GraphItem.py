@@ -31,6 +31,14 @@ class GraphItem:
         return None
 
     @classmethod
+    def findEdge(cls, typename):
+        """ retrieves a base node """
+        for item in cls.graphitems:
+            if isinstance(item, Edge) and item.typename == typename:
+                return item
+        return None
+
+    @classmethod
     def findByName(cls, typename):
         """ retrieves a base node """
         for item in cls.graphitems:

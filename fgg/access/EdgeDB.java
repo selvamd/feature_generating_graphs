@@ -24,9 +24,11 @@ public class EdgeDB extends Persistor {
     private Map<Integer,Edge> edges;
     private int maxkey = 0;
 	private TreeMap<Integer,Integer> buff;
+    private LinkIndex index;
 
     public EdgeDB(LinkType type) {
         this.type = type;
+        this.index = new LinkIndex(type);
         this.table = "e_"+type.toString().toLowerCase();
         this.edges = new HashMap<Integer,Edge>();
 		//used for merging time windows
@@ -37,6 +39,8 @@ public class EdgeDB extends Persistor {
             createIndex("k0");
             createIndex("k1");
             maxkey = maxkey();
+            loadIndex();
+            System.out.println("Size of edge " + type.name() + " = " + index.size());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -74,6 +78,14 @@ public class EdgeDB extends Persistor {
 	public synchronized List<Integer> read(int[] keys, int asofdt, boolean includeObj, List<Integer> out)
     {
 		out.clear();
+        for (int link:index.findLink(keys, new HashSet<Integer>())) {
+            if (asofdt > 0 && index.filterByTime(link,asofdt) < 0) continue;
+            out.add(link);
+            if (includeObj)
+                for (int i=0; i < index.type().maxnodes(); i++)
+                    out.add(index.objkey(link,i));
+        }
+        /*
         read(keys, keys, asofdt, includeObj, out);
         for (Edge e:edges.values()) {
             if (e.matchKey(keys) && e.validdt(asofdt)) {
@@ -83,6 +95,7 @@ public class EdgeDB extends Persistor {
                         out.add(k);
             }
         }
+        */
         return out;
     }
 
@@ -106,6 +119,7 @@ public class EdgeDB extends Persistor {
         edge.addTime(fromdt, todt, buff);
         maxkey = Math.max(maxkey,edge.lk);
         edges.put(edge.lk,edge);
+        edge.loadIndex(index);
         if (edges.size() > 500)
         {
             try {
@@ -144,6 +158,23 @@ public class EdgeDB extends Persistor {
 	//Make "from" or "to" negative to indicate exclusiveness at the boundaries
 	//Make "from" or "to" 0 to indicate open boundary or skip checking
 	//For exact match, make from and to be the same positive value
+    private void loadIndex() {
+        String sql = readSql(null,null);
+		try {
+            Statement stmt  = conn.createStatement();
+            ResultSet rs    = stmt.executeQuery(sql);
+            while (rs.next()) {
+                Edge edge = new Edge();
+                edge.init(rs);
+                edge.loadIndex(index);
+            }
+            rs.close();
+            stmt.close();
+		} catch (Exception e) {
+            e.printStackTrace();
+		}
+    }
+
 	private List<Integer> read(int[] from, int[] to, int asofdt, boolean includeObj, List<Integer> out)
 	{
         String sql = readSql(from,to);
@@ -341,7 +372,7 @@ public class EdgeDB extends Persistor {
         public boolean validdt(int idt) {
             boolean status = false;
             for (int l:dt)
-                if (l < idt)
+                if (l > idt)
                     break;
                 else status = !status;
             return status;
@@ -364,6 +395,11 @@ public class EdgeDB extends Persistor {
                 }
             //System.out.println(pattern[0] + ":compare:" + key[0]);
             return true;
+        }
+
+        public void loadIndex(LinkIndex index) {
+            for (int i = 0; i < dt.length; i=i+2)
+                index.loadLink(lk, key, dt[i], dt[i+1]);
         }
 
         public void addTime(int ifrom, int ito, TreeMap<Integer,Integer> temp)

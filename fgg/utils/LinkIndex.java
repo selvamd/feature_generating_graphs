@@ -41,13 +41,28 @@ public class LinkIndex
 
 		this.zobj2link = new ArrayList<Index>();
 		this.zlink2obj = new ArrayList<Index>();
-		
-		for (int i=0;i<typ.maxnodes();i++) 
+
+		for (int i=0;i<typ.maxnodes();i++)
 		{
 			this.obj2link.add(new TreeSet<Long>());
 			this.link2obj.add(new TreeSet<Long>());
 		}
         //loadLinksFromFile();
+	}
+
+	public int size() {
+		if (times == null)
+			return zobj2link.get(0).size();
+		return obj2link.get(0).size();
+	}
+
+	public int maxlink() {
+		if (times == null) {
+			Index idx = zobj2link.get(0);
+			return idx.pk(idx.size()-1);
+		}
+		return (link2obj.get(0).size() == 0)?
+			0:Utils.msb(link2obj.get(0).last());
 	}
 
 	public int createLink(int[] objs, int fromdt, int todt)
@@ -68,11 +83,12 @@ public class LinkIndex
 	{
 		/////// VALIDATE ///////////////
 		if (link == 0) return 0;
-		if (objs.length != obj2link.size()) return 0;
-		for (int key:objs) if (key <= 0) return 0;
+		if (objs.length < obj2link.size()) return 0;
+		for (int i=0;i < obj2link.size(); i++)
+			if (objs[i] <= 0) return 0;
 
 		/////// INSERT OBJKEYS ///////////////
-		for (int i = 0;i < objs.length;i++) {
+		for (int i = 0;i < obj2link.size();i++) {
 			obj2link.get(i).add(Utils.makelong(objs[i],link));
 			link2obj.get(i).add(Utils.makelong(link,objs[i]));
 		}
@@ -91,8 +107,8 @@ public class LinkIndex
 		return link;
 	}
 
-    
-	public void buildIndex() 
+
+	public void buildIndex()
     {
 		zobj2link.clear();
 		zlink2obj.clear();
@@ -122,8 +138,12 @@ public class LinkIndex
 		times = null;
 	}
 
-    
-	private int objkey_z(int linkkey, CBOType next) 
+	private int objkey_z(int linkkey, int idx) {
+		int idx1 = zlink2obj.get(idx).get(Utils.makelong(linkkey,0));
+		return (idx1 < 0)? -1:zlink2obj.get(idx).fk(idx1);
+	}
+
+	private int objkey_z(int linkkey, CBOType next)
     {
 		for (int i=0; i < type.maxnodes(); i++) {
 			if (type.nodekey(i) != next.ordinal()) continue;
@@ -178,8 +198,16 @@ public class LinkIndex
 
 		return out;
 	}
-    
-	public int objkey(int linkkey, CBOType next) 
+
+	public int objkey(int linkkey, int idx)
+    {
+		if (times == null) return objkey_z(linkkey,idx);
+		for (long l:link2obj.get(idx).tailSet(Utils.makelong(linkkey,0)))
+			if (Utils.msb(l) == linkkey) return Utils.lsb(l);
+		return -1;
+	}
+
+	public int objkey(int linkkey, CBOType next)
     {
 		if (times == null) return objkey_z(linkkey,next);
 		for (int i=0; i < type.maxnodes(); i++) {
@@ -244,7 +272,7 @@ public class LinkIndex
         for (Map.Entry<Integer,Integer> ent:matches.entrySet())
             if (maxcount == ent.getValue())
                 out.add(ent.getKey());
-            
+
 		return out;
 	}
 /*

@@ -8,6 +8,7 @@ import fgg.access.*;
 public class LinkType
 {
 	private int[] nodekey;
+	private String[] nodenames;
 	private int[] nodelimits;
 	private String name;
 	private final int edgekey;
@@ -23,12 +24,12 @@ public class LinkType
 
 	private static Map<Integer,LinkType> key2cbo = new HashMap<Integer,LinkType>();
 
-	public String toString() 
+	public String toString()
     {
 		return this.name;
 	}
 
-	private LinkType(int recid) 
+	private LinkType(int recid)
     {
 		this.edgekey = recid;
 		key2cbo.put(recid,this);
@@ -60,6 +61,13 @@ public class LinkType
 		return true;
 	}
 
+	public int nodekey(String name) {
+		for (int i=0;i<nodenames.length;i++)
+			if (name.equals(nodenames[i]))
+				return nodekey[i];
+		return -1;
+	}
+
 	public int nodekey(int idx) {
 		return (idx < 0 || idx > 4)? 0:nodekey[idx];
 	}
@@ -77,13 +85,13 @@ public class LinkType
 	}
 
     public boolean has(CBOType ctype) {
-        return cboindex(ctype) >= 0; 
+        return cboindex(ctype) >= 0;
     }
 
 	public int cboindex(CBOType ctype) {
         return cboindex(ctype, 0);
     }
-    
+
 	public int cboindex(CBOType ctype, int count)
 	{
         int cnt = 0;
@@ -102,12 +110,12 @@ public class LinkType
 	public static LinkType valueOf(CBOType parent, CBOType child)
   	{
 		if (parent == null || child == null) return null;
-		for (LinkType ltype:key2cbo.values()) 
+		for (LinkType ltype:key2cbo.values())
         {
 			if (ltype.maxnodes() != 2) continue;
             if (parent == child && ltype.cboindex(parent,1) >= 0 && ltype.isDefault)
                     return ltype;
-			if (parent != child && ltype.has(parent) && 
+			if (parent != child && ltype.has(parent) &&
                 ltype.has(child) && ltype.isDefault)
                     return ltype;
 		}
@@ -117,15 +125,15 @@ public class LinkType
 	public static LinkType valueOf(CBOType[] types)
 	{
         Map<CBOType,Integer> map = new HashMap<CBOType,Integer>();
-        
-        for (CBOType type:types) 
+
+        for (CBOType type:types)
         {
             if (map.containsKey(type))
                 map.put(type,1+map.get(type));
             else map.put(type,1);
         }
-        
-		for (LinkType ltype:key2cbo.values()) 
+
+		for (LinkType ltype:key2cbo.values())
         {
             int count = 0;
             for (CBOType ctype:types) {
@@ -161,6 +169,7 @@ public class LinkType
 			type.name = cbo.get("edge_name");
 			type.nodesize = Integer.parseInt(cbo.get("node_size"));
 			type.nodekey = new int[type.nodesize];
+			type.nodenames = new String[type.nodesize];
 			type.nodelimits = new int[type.nodesize];
 			type.isDefault = "1".equals(cbo.get("default_edge"));
 			String str = maxkeys.get(""+type.edgekey);
@@ -171,6 +180,7 @@ public class LinkType
 				type.nodekey[i] = Integer.parseInt(cbo.get("node_key"+i));
 				str = cbo.get("node_limits"+i);
 				type.nodelimits[i] = (str != null)? 20:Integer.parseInt(str);
+				type.nodenames[i] = cbo.get("node_names"+i);
 			}
 		}
 	}

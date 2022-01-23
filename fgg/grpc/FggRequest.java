@@ -7,8 +7,8 @@ import fgg.data.*;
 import fgg.utils.*;
 import fgg.access.*;
 
-//Will encapsulate all request
-//request based state
+//Every request from a client starting a query with single objectkey
+//Then the goal is to pre-fetch/cache NodeAttrs, EdgeAttrs and Edge's NodeAttrs
 public class FggRequest
 {
 	private static int REQUESTID = 100;
@@ -22,7 +22,7 @@ public class FggRequest
 	private final Map<Integer,Field> res;
 	private final Map<Integer,EdgeQry> queries;
 
-	//Will read all link based features for a batch of objkeys from parent
+	//Read all link based features for a batch of objkeys from parent
 	public static class EdgeQry {
 		public final int request;
 		public final LinkType link;

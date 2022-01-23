@@ -1,19 +1,19 @@
 <root>
-<link name="altcust" objects="customer,account"/>
-<link objects="customer,account"/>
-<link objects="customer,household"/>
+<link name="altcust" objects="altcustkey.customer,acctkey.account"/>
+<link name="acctcust" objects="custkey.customer,acctkey.account"/>
+<link name="custhh" objects="custkey.customer,hhkey.household"/>
 
 <object name="household">
     <keys>hh_key</keys>
-    <field-name type="INT" size="4" >hh_key</field-name>
+    <field-name type="INT" size="4">hh_key</field-name>
 </object>
 <object name="customer">
     <keys>cust_key</keys>
-    <field-name type="INT" size="4" >cust_key</field-name>
+    <field-name type="INT" size="4">cust_key</field-name>
 </object>
 <object name="account">
     <keys>acct_key</keys>
-    <field-name type="INT" size="4" >acct_key</field-name>
+    <field-name type="INT" size="4">acct_key</field-name>
 </object>
 
 </root>

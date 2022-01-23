@@ -53,7 +53,7 @@ class FggStore:
         self.client.flush()
 
     #Runs a query on single object collection and returns a cursor to iterate all the objects
-    def query(self, objectName, selects, filter = "", asofdt = 0):
+    def query(self, objectName: str, selects: str, filter: str = "" , asofdt: int = 0):
         info = GraphItem.findNode(objectName)
         if info is None: return None;
         res = []
@@ -69,32 +69,32 @@ class FggStore:
 
 
     #typekey = node or edge key
-    def addAttr(self, typekey, name, dtype, ftype, size):
+    def addAttr(self, typekey:int, name:str, dtype: DataType, ftype:FieldType, size:int):
         self.client.addAttr(typekey, name, dtype, ftype, size)
 
-    def getObjectPK(self, objectName, key):
+    def getObjectPK(self, objectName:str, key:str):
         info = GraphItem.findNode(objectName)
         if info is None: return -1
         return self.client.getObjPK(info.typeid, key)
 
     #returns map of linkkeys -> objkeys[]
-    def getLink2Obj(self, edgekey, objids):
+    def getLink2Obj(self, edgekey:int, objids:[int]):
         return self.client.getLink2Obj(edgekey, objids)
 
-    def getLinks(self, edgekey, objids):
+    def getLinks(self, edgekey:int, objids:[int]):
         return self.client.getLinkKeys(edgekey, objid, 0)
 
-    def setObject(self, objectName, objpk, key):
+    def setObject(self, objectName: str, objpk : int, key:str):
         info = GraphItem.findNode(objectName)
         if info is None: return -1
         return self.client.setObjectAltKey(info.typeid, objpk, 1, key)
 
-    def setObjectAltKey(self, objectName, objid, keyseq, key):
+    def setObjectAltKey(self, objectName:str, objid:int, keyseq:int, key:str):
         info = GraphItem.findNode(objectName)
         if info is None: return -1
         return self.client.setObjectAltKey(info.typeid, objid, keyseq, key)
 
-    def setLink(self, edge, objids, fromdt, todt):
+    def setLink(self, edge : int, objids : [int], fromdt : int, todt: int):
         return self.client.setLink(edge, objids, fromdt, todt)
 
     def printSchema(self):
