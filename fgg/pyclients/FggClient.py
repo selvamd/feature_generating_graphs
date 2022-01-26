@@ -90,12 +90,13 @@ class FggClient:
         obj = self.getObjKeys(nodeid, pk, "", 0)
         return next(iter(obj.keys()))
 
-    def getObjKeys(self, nodeid, matchkey, expr, asofdt):
+    def getObjKeys(self, nodeid, matchkey, expr, sort, asofdt):
         msg = FggDataService_pb2.FggMsg()
         msg.request = MsgType.GET_OBJ_KEYS
         FggClient.AddParam(msg, 'nodekey', nodeid)
         FggClient.AddParam(msg, 'match', matchkey)
         FggClient.AddParam(msg, 'expr', expr)
+        FggClient.AddParam(msg, 'sort', sort)
         FggClient.AddParam(msg, 'asofdt', str(asofdt))
         it = self.stub.queryData(msg)
         result = {}

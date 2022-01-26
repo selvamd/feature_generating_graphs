@@ -15,6 +15,7 @@ if __name__ == '__main__':
     acct = GraphItem.findNode("Account")
     acctcustrel = GraphItem.findEdge("acctcust")
 
+    '''
     print("--- Creating customer and accounts ---")
     id = 100
     for i in range(10000):
@@ -48,15 +49,18 @@ if __name__ == '__main__':
     print("--- linking objects cust to account ---")
     for i in range(100000):
         store.setLink(acctcustrel.id(),[int(id+i/10),id+i], asof,99991231)
-
+    '''
     #navigate relationships
     print("---- Now lets query by objects and relationships ------")
-    cur = store.query("Customer","cust_key,age","($age > 53)", asof)
+    cur = store.query("Customer","cust_key,age","($age > 10)", "+age,+strkey", asof)
+    cnt = 0
     while cur.next():
-        print("Cust\t",cur.get("cust_key",asof),cur.get("age",asof))
+        print("Cust\t",cur.getObjectPK(), cur.get("cust_key",asof), cur.get("age",asof))
+        cnt += 1
+        if cnt == 100:
+            break
         act = cur.linkByName("acctcust", asof)
         act.selectAttrs("acct_key,balance")
         while act.next():
-            print("\tAcct\t",act.get("acct_key",asof),act.get("balance",asof))
-        if cur.getObjectPK() > 200:
-            break
+            act.getObjectPK()
+            #print("\tAcct\t",act.get("acct_key",asof),act.get("balance",asof))

@@ -195,6 +195,17 @@ public class FieldMeta
         return null;
     }
 
+    public int fcompare(Object o1, Object o2) 
+	{
+        if (o1 == null && o2 == null) return 0;
+        if (o1 == null || o2 == null) return (o1 == null)? -1:+1;
+    	if (dtype == DataType.STRING)
+			return o1.toString().compareTo(o2.toString());
+		double d1 = o2d(o1), d2 = o2d(o2);
+		if (d1 == d2) return 0;
+		return (d1 < d2)? -1:+1;
+    }
+
     public boolean fequals(Object o1, Object o2)
     {
         //if (fname.endsWith("share_affiliate_cd"))

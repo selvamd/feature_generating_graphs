@@ -278,9 +278,10 @@ public class FggService2 extends FggDataServiceGrpc.FggDataServiceImplBase
 		CBOType type = CBOType.valueOf(getParamInt(request, "nodekey"));
 		String matchkey = getParam(request, "match");
 		String expr = getParam(request, "expr");
+		String sort = getParam(request, "sort");
 		int asofdt = getParamInt(request, "asofdt");
 
-		Map<Integer,Integer> objkeys = Cache2.getObjectKey(type, matchkey, expr, asofdt, new HashMap<Integer,Integer>());
+		Map<Integer,Integer> objkeys = Cache2.getObjectKey(type, matchkey, expr, asofdt, sort, new LinkedHashMap<Integer,Integer>());
 		if (matchkey == null || matchkey.length() == 0)
 			objkeys.forEach((k,v) -> bldr.addOutkey(k));
 		else
@@ -298,7 +299,7 @@ public class FggService2 extends FggDataServiceGrpc.FggDataServiceImplBase
 		String expr = getParam(request, "expr");
 		int asofdt = getParamInt(request, "asofdt");
 
-		Map<Integer,Integer> objkeys = Cache2.getObjectKey(type, "", expr, asofdt, new HashMap<Integer,Integer>());
+		Map<Integer,Integer> objkeys = Cache2.getObjectKey(type, "", expr, asofdt, null, new HashMap<Integer,Integer>());
 
 		if (objkeys.size() == 0 || getParamInt(request, "attr0") <= 0) {
 			bldr.addOutkey(0); //requestid = 0
