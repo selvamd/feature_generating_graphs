@@ -16,33 +16,33 @@ class FggClient:
         msg.request = MsgType.LOGIN
         FggClient.AddParam(msg, 'user', user)
         FggClient.AddParam(msg, 'pass', passwd)
-        it = self.stub.queryData(msg)
+        it = query(self.stub,msg)
         return it.values[2].value
 
     def getNodes(self):
         msg = FggDataService_pb2.FggMsg()
         msg.request = MsgType.GET_NODES
-        it = self.stub.queryData(msg)
+        it = query(self.stub,msg)
         return it.outkey
 
     def getEdges(self):
         msg = FggDataService_pb2.FggMsg()
         msg.request = MsgType.GET_EDGES
-        it = self.stub.queryData(msg)
+        it = query(self.stub,msg)
         return it.outkey
 
     def getAttrs(self, isnode):
         msg = FggDataService_pb2.FggMsg()
         msg.request = MsgType.GET_ATTRS
         FggClient.AddParam(msg, 'isnode', str(isnode).lower())
-        it = self.stub.queryData(msg)
+        it = query(self.stub,msg)
         return it.outkey
 
     def getNodeInfo(self, nodeid):
         msg = FggDataService_pb2.FggMsg()
         msg.request = MsgType.GET_NODE_INFO
         FggClient.AddParam(msg, 'nodekey', nodeid)
-        it = self.stub.queryData(msg)
+        it = query(self.stub,msg)
         parent = FggClient.GetParam(it,'parentnodekey')
         leg = FggClient.GetParam(it,'legnodekey')
         root = FggClient.GetParam(it,'rootnodekey')
@@ -59,7 +59,7 @@ class FggClient:
         msg = FggDataService_pb2.FggMsg()
         msg.request = MsgType.GET_EDGE_INFO
         FggClient.AddParam(msg, 'edgekey', edgeid)
-        it = self.stub.queryData(msg)
+        it = query(self.stub,msg)
         edge = Edge(str(edgeid), FggClient.GetParam(it,'name'))
         for x in range(len(it.values)-3):
             edge.addNodeKey(FggClient.GetParam(it, 'nodekey' + str(x)))
@@ -69,7 +69,7 @@ class FggClient:
         msg = FggDataService_pb2.FggMsg()
         msg.request = MsgType.GET_ATTR_INFO
         FggClient.AddParam(msg, 'attrkey', attrid)
-        it = self.stub.queryData(msg)
+        it = query(self.stub,msg)
         attr = EdgeAttr(attrid, FggClient.GetParam(it, 'name'),
                         GraphItem.findByPK(FggClient.GetParam(it, 'key')),
                         DataType[FggClient.GetParam(it,'dtype')])
@@ -79,7 +79,7 @@ class FggClient:
         msg = FggDataService_pb2.FggMsg()
         msg.request = MsgType.GET_ATTR_INFO
         FggClient.AddParam(msg, 'attrkey', attrid)
-        it = self.stub.queryData(msg)
+        it = query(self.stub,msg)
         attr = NodeAttr(attrid, FggClient.GetParam(it, 'name'),
                         GraphItem.findByPK(FggClient.GetParam(it, 'key')),
                         DataType[FggClient.GetParam(it, 'dtype')],
@@ -98,12 +98,12 @@ class FggClient:
         FggClient.AddParam(msg, 'expr', expr)
         FggClient.AddParam(msg, 'sort', sort)
         FggClient.AddParam(msg, 'asofdt', str(asofdt))
-        it = self.stub.queryData(msg)
+        it = query(self.stub,msg)
         result = {}
         for v in it.outkey:
             result[v] = 1
         for v in it.values:
-            if v.name != 'nodekey' and v.name != 'match' and v.name != 'expr' and v.name != 'asofdt':
+            if v.name not in "nodekey match expr asofdt sort".split():
                 result[v.name] = v.value
         return result
 
@@ -117,13 +117,13 @@ class FggClient:
         FggClient.AddParam(msg, 'objkey', objid)
         FggClient.AddParam(msg, 'altkeyseq', altkeyseq)
         FggClient.AddParam(msg, 'str_key', key)
-        it = self.stub.queryData(msg)
+        it = query(self.stub,msg)
         return it.outkey[0]
 
     def flush(self):
         msg = FggDataService_pb2.FggMsg()
         msg.request = MsgType.NOTIFY_FLUSH
-        self.stub.queryData(msg)
+        query(self.stub,msg)
 
     def getLink2Obj(self, edgekey, objs):
         msg = FggDataService_pb2.FggMsg()
@@ -132,7 +132,7 @@ class FggClient:
         FggClient.AddParam(msg, 'includeobj', "true")
         for i in range(len(attrs)):
             FggClient.AddParam(msg, 'objkey'+ str(i), str(objs[i]))
-        it = self.stub.queryData(msg)
+        it = query(self.stub,msg)
         res = {}
         grps = GraphItem.findByPK(edgekey).maxnodes()+1
         for grp in range(len(it.outkey)/grps):
@@ -151,7 +151,7 @@ class FggClient:
         FggClient.AddParam(msg, 'datatype', dtype.name)
         FggClient.AddParam(msg, 'fieldtype', fldtype.name)
         FggClient.AddParam(msg, 'attrsize', str(size))
-        it = self.stub.queryData(msg)
+        it = query(self.stub,msg)
         if len(it.outkey) == 0:
             return False
         self.getNodeAttrInfo(it.outkey[0])
@@ -166,7 +166,7 @@ class FggClient:
             FggClient.AddParam(msg, 'instkey' + str(idx), linkkeys[idx])
         for i in range(len(attrs)):
             FggClient.AddParam(msg, 'attrkey'+ str(i), str(attrs[i].typeid))
-        it = self.stub.requestData(msg)
+        it = request(self.stub,msg)
         v = FeatureData(None)
         for r in it:
             if v.add(r):
@@ -185,7 +185,7 @@ class FggClient:
         FggClient.AddParam(msg, 'nodecnt', str(nodecnt))
         for i in range(len(attrs)):
             FggClient.AddParam(msg, 'attrkey'+ str(i), str(attrs[i].typeid))
-        it = self.stub.requestData(msg)
+        it = request(self.stub,msg)
         v = FeatureData(None)
         for r in it:
             if v.add(r):
@@ -202,7 +202,7 @@ class FggClient:
             FggClient.AddParam(msg, 'instkey' + str(idx), objkeys[idx])
         for i in range(len(attrs)):
             FggClient.AddParam(msg, 'attrkey'+ str(i), str(attrs[i].typeid))
-        it = self.stub.requestData(msg)
+        it = request(self.stub,msg)
         v = FeatureData(None)
         for r in it:
             if v.add(r):
@@ -218,7 +218,7 @@ class FggClient:
         FggClient.AddParam(msg, 'includeobj', 'false')
         for i in range(len(objkeys)):
             FggClient.AddParam(msg, 'objkey'+str(i), objkeys[i])
-        it = self.stub.queryData(msg)
+        it = query(self.stub,msg)
         return it.outkey
 
     def setLink(self, edgeid, objkeys, fromdt, todt):
@@ -229,7 +229,7 @@ class FggClient:
         FggClient.AddParam(msg, 'todt', todt)
         for i in range(len(objkeys)):
             FggClient.AddParam(msg, 'objkey'+str(i), objkeys[i])
-        it = self.stub.queryData(msg)
+        it = query(self.stub,msg)
         return it.outkey[0]
 
     def publish(self, features):
@@ -244,11 +244,10 @@ class FggClient:
             if v.name == 'UPDATED':
                 return v.value
 
-
     def getDates(self):
         msg = FggDataService_pb2.FggMsg()
         msg.request = MsgType.GET_DATES
-        it = self.stub.queryData(msg)
+        it = query(self.stub,msg)
         return it.outkey
 
     @staticmethod
@@ -265,7 +264,6 @@ class FggClient:
             value = ''
         p.value = str(value)
 
-
     def connect(self):
         self.login("qwer","dsd")
         nodes = self.getNodes()
@@ -280,6 +278,14 @@ class FggClient:
         attrs = self.getAttrs(False)
         for attr in attrs:
             self.getEdgeAttrInfo(attr)
+
+def request(stub, msg):
+    #print(str(msg))
+    return stub.requestData(msg)
+
+def query(stub, msg):
+    #print(str(msg))
+    return stub.queryData(msg)
 
 if __name__ == '__main__':
     client = FggClient('localhost',33789)

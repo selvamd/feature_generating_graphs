@@ -16,12 +16,12 @@ if __name__ == '__main__':
     acctcustrel = GraphItem.findEdge("acctcust")
 
     '''
-    print("--- Creating customer and accounts ---")
+    print("--- Creating new customers and accounts ---")
     id = 100
-    for i in range(10000):
+    for i in range(100):
         store.setObject("Customer", id+i, str(id+i))
 
-    for i in range(100_000):
+    for i in range(10_000):
         store.setObject("Account", id+i, str(id+i))
         store.setObject("Account", id+i, str(id+i))
 
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     store.addAttr(cust.id(),"age", DataType.INT, FieldType.CORE, 4)
     store.addAttr(acct.id(),"balance", DataType.INT, FieldType.CORE, 4)
 
-    #update attr
+    #write to the customer object
     print("--- Update age for customer ---")
     cur = store.query("Customer","cust_key,age")
     while cur.next():
@@ -38,7 +38,7 @@ if __name__ == '__main__':
         cur.set("age", asof, 20 + (custkey%50))
         cur.publish()
 
-    #update attr
+    #write to the account object
     print("--- Update balance for accounts ---")
     cur = store.query("Account","acct_key,balance")
     while cur.next():
@@ -47,20 +47,16 @@ if __name__ == '__main__':
         cur.publish()
 
     print("--- linking objects cust to account ---")
-    for i in range(100000):
+    for i in range(10_000):
         store.setLink(acctcustrel.id(),[int(id+i/10),id+i], asof,99991231)
     '''
+
     #navigate relationships
     print("---- Now lets query by objects and relationships ------")
     cur = store.query("Customer","cust_key,age","($age > 10)", "+age,+strkey", asof)
-    cnt = 0
     while cur.next():
         print("Cust\t",cur.getObjectPK(), cur.get("cust_key",asof), cur.get("age",asof))
-        cnt += 1
-        if cnt == 100:
-            break
         act = cur.linkByName("acctcust", asof)
         act.selectAttrs("acct_key,balance")
         while act.next():
-            act.getObjectPK()
-            #print("\tAcct\t",act.get("acct_key",asof),act.get("balance",asof))
+            print("\tAcct\t",act.get("acct_key",asof),act.get("balance",asof))
