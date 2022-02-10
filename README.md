@@ -14,7 +14,7 @@ FGG publishes language specific client library that abstracts the low level conn
 This section describes how to use the client API to interact with the graph 
 
 ## Basic interactions with object graph 
-	- Create an instance of FggStore (Clientside reference to interact with graphstore)
+	- Create an instance of FggStore (Clientside stub handling all server interactions)
 		store = FggStore()
 	- Create a Object of a particular node
 		objid = store.setObject(nodename, Key)
