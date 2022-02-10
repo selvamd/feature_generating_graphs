@@ -5,7 +5,7 @@ FGG is a read-write object graph framework for data virtualization, dynamic read
 	- Node is the prototype for objects (or conversely objects are instances of a node) 
 	- Edges are defined as connection between a set of nodes and therefore are prototypes for relationships.
 	- Analogous to objects for node, link refers to an instance of an edge (or a relationship between a set of objects)
-	- Edges connecting more than 2 nodes are possible and create what are called as Hypergraphs
+	- Edges connecting more than 2 nodes are possible and creates what are called as Hypergraphs
 
 Attributes can be added to both nodes and edges and its instances are timeseries objects and not scalar values  
 
