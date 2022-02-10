@@ -10,7 +10,7 @@ FGG is a read-write object graph framework for data virtualization, dynamic read
 Attributes can be added to both nodes and edges and its instances are timeseries objects and not scalar values  
 
 ## 
-FGG publishes language specific client library (currently available for python and java) that abstracts the low level connectivity details to the remote object store. This section describes how to use the client API to interact with the graph 
+FGG publishes language specific client library (currently available for python and java) that abstracts the low level connectivity details to the remote object store. This section describes (in pseudocode) how to interact with the graph 
 
 ## Basic interactions with object graph 
 	- Create an instance of FggStore (Clientside stub handling all server interactions)
