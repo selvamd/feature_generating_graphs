@@ -16,13 +16,13 @@ This section describes how to use the client API to interact with the graph
 ## Basic interactions with object graph 
 	- Create an instance of FggStore (Clientside reference to interact with graphstore)
 		store = FggStore()
-	- Create new Object instance of a particular node type
+	- Create a Object of a particular node
 		objid = store.setObject(nodename, Key)
 	- Setup relationship between 2 objects
 		store.setLink(edgename,[obj1.id,obj2.id], fromdt, todt)
 	- Define new Attribute for a node or an edge 
 		store.addAttr(node_edge_name, attrname, datatype..)
-	- Obtain cursor to objects in object store
+	- Obtain cursor to browse objects in object store
 		cursor = store.query(nodename, attributes, filter, sort)
 	- Iterate and read data
 		while cursor.next(): 
