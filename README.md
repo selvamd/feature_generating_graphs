@@ -31,7 +31,7 @@ This section describes how to use the client API to interact with the graph
 		while cursor.next(): 
 			cursor.set(attrname, asof, value)
 			cursor.publish()
-	- Query relationships as nested loops
+	- Navigate the graph by traversing thru the relationships
 		while cursor.next(): 
 			linkedObjCur = cursor.link(edgename)
 			while linkedObjCur.next():
