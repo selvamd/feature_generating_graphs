@@ -84,15 +84,10 @@ class FggStore:
     def getLinks(self, edgekey:int, objids:[int]):
         return self.client.getLinkKeys(edgekey, objid, 0)
 
-    def setObject(self, objectName: str, objpk : int, key:str):
+    def setObject(self, objectName:str, objid:int, keysrc:int, key:str):
         info = GraphItem.findNode(objectName)
         if info is None: return -1
-        return self.client.setObjectAltKey(info.typeid, objpk, 1, key)
-
-    def setObjectAltKey(self, objectName:str, objid:int, keyseq:int, key:str):
-        info = GraphItem.findNode(objectName)
-        if info is None: return -1
-        return self.client.setObjectAltKey(info.typeid, objid, keyseq, key)
+        return self.client.setObjectAltKey(info.typeid, objid, keysrc, key)
 
     def setLink(self, edge : int, objids : [int], fromdt : int, todt: int):
         return self.client.setLink(edge, objids, fromdt, todt)

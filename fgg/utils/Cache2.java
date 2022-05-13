@@ -123,11 +123,11 @@ public class Cache2
         NodeKeyDB db = nodes.get(type);
         if (objkey == -1)
         {
-            objkey = db.read(str_key);
+            objkey = db.read(str_key, altKeyNum);
             if (objkey < 0)
                 objkey = db.nextkey();
         }
-        db.upsert(objkey, altKeyNum, str_key, db.read(objkey,altKeyNum));
+        db.upsert(objkey, altKeyNum, str_key);
 
         int idx = 0;
         for (int attr:attrs) {
@@ -144,7 +144,7 @@ public class Cache2
         return nodes.get(type).read(key,1);
     }
 
-	private static void filterObject(CBOType type, String strexpr, int asofdt, Map<Integer,Integer> out) 
+	private static void filterObject(CBOType type, String strexpr, int asofdt, Map<Integer,Integer> out)
 	{
 		Map<String,Object>  eval = new HashMap<String,Object>();
 		Map<Integer,Field> dbfld = new HashMap<Integer,Field>(); //Fld obj for singledb
@@ -153,11 +153,11 @@ public class Cache2
 		//parse expr and vars to eval
 		Expr expr = (strexpr == null || strexpr.trim().length() == 0)? null:Expr.getExpr(strexpr);
 		if (expr == null) return;
-		
+
 		Set<String> s = expr.getVars(new HashSet<String>());
 
 		//Load all values
-		for (String f:s) 
+		for (String f:s)
 		{
 			if (f.equals("strkey") || f.equals("objkey")) continue;
 			FieldMeta m = FieldMeta.lookup(type, f);
@@ -184,17 +184,17 @@ public class Cache2
 			if (!expr.filter(eval))
 				it.remove();
 		}
-		
+
 	}
 
-	private static void sortObject(CBOType type, String sortflds, final int asofdt, Map<Integer,Integer> out) 
+	private static void sortObject(CBOType type, String sortflds, final int asofdt, Map<Integer,Integer> out)
 	{
 		Map<String,Object>  eval = new HashMap<String,Object>();
 		Map<Integer,Field> dbfld = new HashMap<Integer,Field>(); //Fld obj for singledb
 		final Map<String,Map<Integer,Field>> cols = new LinkedHashMap<String,Map<Integer,Field>>();
-		
+
 		//Load all values
-		for (String f:sortflds.split(",")) 
+		for (String f:sortflds.split(","))
 		{
 			cols.put(f,new HashMap<Integer,Field>());
 			if (f.substring(1).equals("strkey") || f.substring(1).equals("objkey")) continue;
@@ -203,7 +203,7 @@ public class Cache2
 			for (NodeDataDB db: nodevalues.get(type))
 				cols.get(f).putAll(db.readCol(m.index(), dbfld));
 		}
-		
+
 		Comparator<Integer> c = new Comparator<Integer>() {
 			public int compare(Integer k1, Integer k2) {
 				for (String key:cols.keySet()) {
@@ -227,12 +227,12 @@ public class Cache2
 				return 0;
 			}
 		};
-		
+
 		List<Integer> outl = out.keySet().stream().sorted(c).collect(Collectors.toList());
 		out.clear();
 		for (Integer k:outl) out.put(k,0);
 	}
-	
+
     //Derives match->objkey for a given node (CBOType)
 	//asofdt is strictly required to evaluate variables in strexpr
 	//sortflds format +attr1,-attr2,-attr3...
@@ -248,11 +248,11 @@ public class Cache2
         return out;
     }
 
-    //Derives extkey->objkey for a given node (CBOType)
-	public static int getObjectKey(CBOType type, String key)
-    {
-        return nodes.get(type).read(key);
-    }
+    //Derives first extkey->objkey for a given node (CBOType)
+	//public static int getObjectKey(CBOType type, String key)
+    //{
+    //    return nodes.get(type).read(key,1);
+    //}
 
     //Derives linkkey->objkey for a given node (CBOType)
 	public static int getObjectKey(LinkType ltype, CBOType ctype, int nodecnt, int link)
