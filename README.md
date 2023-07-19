@@ -1,12 +1,45 @@
-# feature_generating_graphs
-FGG is a read-write object graph framework for data virtualization, dynamic read-writes, traversals and feature computations
+# What is FCG? 
+FGG (feature_generating_graphs) is a read-write object graph framework for data virtualization, dynamic read-writes, traversals and feature computations
+
+## Feature Engineering
+ - Refers to data enrichments that happen in the context of model development
+ - The least automatable part of MDLC and the most time intensive. Highly contextual to the model created and based on domain data. Gives less opportunity to automate using third party tools
+ - Functionally analogous to “T” in ETL but on steroids. Traditional ETL transforms (Rollup, Drilldown, Slicing, Dicing) can generate some features but not all. Models need features generated from statistical, timeseries, sampling, simulation and (other) model-based techniques
+ - Requires experimentation, tuning, tweaking and validation to ascertain its correctness and fit for the model. Requires tight integration with visualization and analysis tools 
+ - Features can be inferential derived from business assumptions. Makes the computational results less stable than factually based ones. Storage pipelines need to support recomputes and retroactive back-propagation
+ - Cost of feature creation is not always equal. Features may require dynamic generation to optimize for storage and may need to be pre-generated (aka memorized) to optimize for speed and computional costs.
+ - To scale ML efforts for large teams, (a) features need to be sharable across teams/projects/models, (b) precise definitions, as documentation or code, needs to be discoverable.
+ - Analysts need a self-service setup to productionize features. The tight coupling makes a factory type of ownership handoff to data engineers very inefficient
+
+## ML Stack on Graph
+- FCG is a graph DB designed for feature engineering. It is designed with a combination of functions that makes it very powerful tool that can support model development.
+	- Business objects as nodes. Properties and edges are timeseries
+ 	- Supports real time read/write with ability to broadcast state changes
+  	- State changes applied as curational or mutational at retrieval time
+  	- Enforces additional structure on top of native graph data model
+  		- Logical data model based on predefined objects and relationships
+  	 	- Nothing anonymous. All nodes and edges adhere to strict type system
+  	  	- Cardinality rules enforced on relationships
+  	  	- Potential to support hyper-graphs in the model
+	- Ability to export to multi-model DB formats
+ 		- Relational, Graph and hierarchical (Document/JSON/BSON)
+   	- Decorator interfaces during retrieval for dynamic curation.
+   		- Extrapolate, Interpolate, obfuscate, mask or gap fill
+
+ - Useful as unified stack for real time feature engineering and warehousing process
+ - Generate horizontally scalable big tables thru updates from disparate asynchronous pipelines
+ - Provide unified consistent schema for historical and current state of objects
+ - Support full and incremental import/export capabilities
+ - Ability to virtualize data as in-memory cached objects with CRUD abilities
+ - Data abstraction to serve both dynamic or memoized features
+ - Dynamic aggregations or reduction can happen in horizontal and/or vertical axis
+ - Complimentary to any modern Analytics platform - Alterix, Knime, H20.ai, Databricks, IBM Watson, AWS Sagemaker
 
 ## FGG is a structured graph 
-	- Node is the prototype for objects (or conversely objects are instances of a node) 
-	- Edges are defined as connection between a set of nodes and therefore are prototypes for relationships.
-	- Analogous to objects for node, link refers to an instance of an edge (or a relationship between a set of objects)
-	- Edges connecting more than 2 nodes are possible and creates what are called as Hypergraphs
-
+- Node is the prototype for objects (or conversely objects are instances of a node) 
+- Edges are defined as connection between a set of nodes and therefore are prototypes for relationships.
+- Analogous to objects for node, link refers to an instance of an edge (or a relationship between a set of objects)
+- Edges connecting more than 2 nodes are possible and creates what are called as Hypergraphs
 Attributes can be added to both nodes and edges and its instances are timeseries objects and not scalar values  
 
 ## Uses GRPC to support multi-language clients
@@ -36,39 +69,5 @@ FGG publishes language specific client library (currently available for python a
 			while linkedObjCur.next():
 				.....
 
-## Feature Engineering
- - Refers to data enrichments that happen in the context of model development
- - The least automatable part of MDLC and the most time intensive. Highly contextual to the model created and based on domain data. Gives less opportunity to automate using third party tools
- - Functionally analogous to “T” in ETL but on steroids. Traditional ETL transforms (Rollup, Drilldown, Slicing, Dicing) can generate some features but not all. Models need features generated from statistical, timeseries, sampling, simulation and (other) model-based techniques
- - Requires experimentation, tuning, tweaking and validation to ascertain its correctness and fit for the model. Requires tight integration with visualization and analysis tools 
- - Features can be inferential derived from business assumptions. Makes the computational results less stable than factually based ones. Storage pipelines need to support recomputes and retroactive back-propagation
- - Cost of feature creation is not always equal. Features may require dynamic generation to optimize for storage and may need to be pre-generated (aka memorized) to optimize for speed and computional costs.
- - To scale ML efforts for large teams, (a) features need to be sharable across teams/projects/models, (b) precise definitions, as documentation or code, needs to be discoverable.
- - Analysts need a self-service setup to productionize features. The tight coupling makes a factory type of ownership handoff to data engineers very inefficient
-
-## ML Stack on Graph
-- FCG is a graph DB designed for feature engineering. It is designed with a combination of functions that makes it very powerful tool that can support model development.
-	- Business objects as nodes. Properties and edges are timeseries
- 	- Supports real time read/write with ability to broadcast state changes
-  	- State changes applied as curational or mutational at retrieval time
-  	- Enforces additional structure on top of native graph data model
-  		- Logical data model based on predefined objects and relationships
-  	 	- Nothing anonymous. All nodes and edges adhere to strict type system
-  	  	- Cardinality rules enforced on relationships
-  	  	- Potential to support hyper-graphs in the model
-	- Ability to export to multi-model DB formats
- 		- Relational, Graph and hierarchical (Document/JSON/BSON)
-   	- Decorator interfaces during retrieval for dynamic curation.
-   		- Extrapolate, Interpolate, obfuscate, mask or gap fill
- 
-
- - Useful as unified stack for real time feature engineering and warehousing process
- - Generate horizontally scalable big tables thru updates from disparate asynchronous pipelines
- - Provide unified consistent schema for historical and current state of objects
- - Support full and incremental import/export capabilities
- - Ability to virtualize data as in-memory cached objects with CRUD abilities
- - Data abstraction to serve both dynamic or memoized features
- - Dynamic aggregations or reduction can happen in horizontal and/or vertical axis
- - Complimentary to any modern Analytics platform - Alterix, Knime, H20.ai, Databricks, IBM Watson, AWS Sagemaker
 
    
