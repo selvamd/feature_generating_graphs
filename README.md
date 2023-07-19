@@ -4,7 +4,7 @@ FGG (feature_generating_graphs) is a read-write object graph framework for data 
 ## Feature Engineering
  - Refers to data enrichments that happen in the context of model development
  - The least automatable part of MDLC and the most time intensive. Highly contextual to the model created and based on domain data. Gives less opportunity to automate using third party tools
- - Functionally analogous to “T” in ETL but on steroids. Traditional ETL transforms (Rollup, Drilldown, Slicing, Dicing) can generate some features but not all. Models need features generated from statistical, timeseries, sampling, simulation and (other) model-based techniques
+ - Functionally analogous to “T” in ETL but on steroids. Traditional ETL transforms (Rollup, Drilldown, Slicing, Dicing) can generate some features but not all. Models need features generated from statistical, timeseries, sampling, simulation and (other) model-based techniques. Companies like snowflake try to overcome the limitations by creating programming ecosystem with SQL. But SQL as a technology doesnot seem to be the natural ecosystem for a comprehensive solution. 
  - Requires experimentation, tuning, tweaking and validation to ascertain its correctness and fit for the model. Requires tight integration with visualization and analysis tools 
  - Features can be inferential derived from business assumptions. Makes the computational results less stable than factually based ones. Storage pipelines need to support recomputes and retroactive back-propagation
  - Cost of feature creation is not always equal. Features may require dynamic generation to optimize for storage and may need to be pre-generated (aka memorized) to optimize for speed and computional costs.
