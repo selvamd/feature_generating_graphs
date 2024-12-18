@@ -22,7 +22,7 @@ public class Utils
 
 	public static int msb(long l) { return (int)(l>>32); }
 	public static int lsb(long l) { return (int)l; 		 }
-	public static int mindate() { return 20141231; 		 }
+	public static int mindate() { return 20121231; 		 }
 
 	public static int today() {
         try {

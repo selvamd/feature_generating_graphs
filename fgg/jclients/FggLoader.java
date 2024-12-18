@@ -46,7 +46,6 @@ public class FggLoader extends Persistor
 		}
 	}
 
-
 	public int persistSingleObject() throws Exception
 	{
 		if (cbolist.size() <= 0) return 0;
